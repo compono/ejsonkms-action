@@ -1,7 +1,7 @@
 {
   "name": "ejson-action",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Simple action that executes ejson command over a file",
   "scripts": {
     "lint": "npx eslint --fix .",

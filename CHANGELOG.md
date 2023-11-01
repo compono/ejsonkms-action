@@ -1,3 +1,11 @@
+## v0.1.1 (2023-11-01)
+
+
+- fix: execute (#2)
+- * fix: remove binary from source and add it to Docker file
+
+* fix: add documentation on readme
+
 ## v0.1.0 (2023-11-01)
 
 
