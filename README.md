@@ -1,2 +1,3 @@
 # ejson-action
-Github action that helps to execute encription and decription of ejson files
+
+Simple github action that helps to execute encryption and decryption of json files using the ejson cli

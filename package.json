@@ -1,0 +1,44 @@
+{
+  "name": "ejson-action",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Simple action that executes ejson command over a file",
+  "scripts": {
+    "lint": "npx eslint --fix .",
+    "format": "npx prettier --write .",
+    "test": "mocha ./tests/**/*.test.js",
+    "pre-commit": "pre-commit install --hook-type commit-msg"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Drafteame/sync-secrets-manager.git"
+  },
+  "keywords": [
+    "github",
+    "action",
+    "json",
+    "encrypt",
+    "decrypt"
+  ],
+  "author": "Eduardo Aguilar <dante.aguilar@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Drafteame/ejson-action/issues"
+  },
+  "homepage": "https://github.com/Drafteame/ejson-action#readme",
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "child_process": "^1.0.2",
+    "fs": "^0.0.1-security",
+    "lodash": "^4.17.21",
+    "util": "^0.12.5"
+  },
+  "devDependencies": {
+    "eslint": "^8.52.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "prettier": "^3.0.3"
+  }
+}

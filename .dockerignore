@@ -1,0 +1,7 @@
+.github/
+.cz.toml
+.eslintrc.json
+.pre-commit-config.yaml
+.prettierignore
+.prettierrc.json
+tests/
