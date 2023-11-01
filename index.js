@@ -9,9 +9,11 @@ const main = async () => {
     core.getInput("private_key"),
   );
 
-  const decrypted = await action.run();
-
-  core.info(`Decrypted JSON: ${decrypted}`);
+  try {
+    await action.run();
+  } catch (e) {
+    core.error(e);
+  }
 };
 
 main();

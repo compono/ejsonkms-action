@@ -17,7 +17,7 @@ inputs:
     required: false
 
 outputs:
-  decrypt:
+  decrypted:
     description: "List of changes made to the secret"
 
 runs:
