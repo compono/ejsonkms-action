@@ -1,3 +1,8 @@
+## v0.2.0 (2023-11-03)
+
+
+- feat: add out_file option to create a file for decryption (#3)
+
 ## v0.1.1 (2023-11-01)
 
 
