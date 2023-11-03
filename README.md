@@ -11,6 +11,7 @@ Simple github action that helps to execute encryption and decryption of json fil
     action: decrypt # [encrypt, decrypt]
     file_path: <path-to-ejson-file>
     private_key: <private-key-string> # needed if encrypt is used as action
+    out_file: <path-to-json-file> # File where the decrypted content will be stored (optional)
 
 ```
 
@@ -38,11 +39,18 @@ jobs:
         action: decrypt
         file_path: <path-to-ejson-file>
         private_key: <private-key-string>
+        out_file: <path-to-json-file>
 
     - name: Decrypted content
       run: |
         echo "Decrypted:"
-        echo "${{ steps.decrypt.outputs.decrypted }}"
+        echo '${{ steps.decrypt.outputs.decrypted }}'
+        echo
+        echo
+
+        echo "Stored File:"
+        cat <path-to-json-file>
+        echo
 
     - name: Encrypt file
       uses: Drafteame/ejson-action@main
