@@ -15,10 +15,13 @@ inputs:
   private_key:
     description: "Private key needed to decrypt action"
     required: false
+  out_file:
+    description: "File path to an out json file that should be use to place the decrypted content of the ejson"
+    required: false
 
 outputs:
   decrypted:
-    description: "List of changes made to the secret"
+    description: "Decrypted JSON content"
 
 runs:
   using: "docker"

@@ -11,6 +11,7 @@ export default class Action {
   #action;
   #filePath;
   #privateKey;
+  #outFile;
 
   /**
    * Create a new Action instance.
@@ -19,12 +20,13 @@ export default class Action {
    * @param {string} filePath The path to the JSON file.
    * @param {string} privateKey Optional private key for encryption.
    */
-  constructor(action, filePath, privateKey = "") {
+  constructor(action, filePath, privateKey = "", outFile = "") {
     this.exec = util.promisify(cp.exec);
 
     this.#action = action;
     this.#filePath = filePath;
     this.#privateKey = privateKey;
+    this.#outFile = outFile;
 
     this.#validate();
   }
@@ -103,6 +105,10 @@ export default class Action {
 
     if (!lodash.isEmpty(err)) {
       throw new Error(err);
+    }
+
+    if (!lodash.isEmpty(this.#outFile)) {
+      fs.writeFileSync(this.#outFile, out, "utf-8");
     }
 
     core.setOutput("decrypted", out);

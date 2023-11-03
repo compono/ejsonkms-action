@@ -7,6 +7,7 @@ const main = async () => {
     core.getInput("action"),
     core.getInput("file_path"),
     core.getInput("private_key"),
+    core.getInput("out_file"),
   );
 
   try {
