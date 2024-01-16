@@ -13,7 +13,11 @@ const main = async () => {
   try {
     await action.run();
   } catch (e) {
-    core.error(e);
+    core.error(
+      `[ERROR] Failure on ejson ${core.getInput("action")}: ${e.message}`,
+    );
+
+    process.exit(1);
   }
 };
 

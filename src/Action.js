@@ -19,6 +19,7 @@ export default class Action {
    * @param {string} action The action to perform (encrypt or decrypt).
    * @param {string} filePath The path to the JSON file.
    * @param {string} privateKey Optional private key for encryption.
+   * @param {string} outFile Path to a destination file were the decrypted content should be placed.
    */
   constructor(action, filePath, privateKey = "", outFile = "") {
     this.exec = util.promisify(cp.exec);
@@ -47,7 +48,7 @@ export default class Action {
    *
    * @throws {Error} Invalid action to perform
    *
-   * @returns {Promise<string>} - The result of the action.
+   * @returns {Promise<string|void>} - The result of the action.
    */
   async run() {
     switch (this.#action) {
@@ -70,6 +71,8 @@ export default class Action {
    * @returns {Promise<string>} - The encrypted content.
    */
   async #encrypt() {
+    this.#debugFileContent(this.#filePath);
+
     const command = `${ejson} encrypt ${this.#filePath}`;
     const opts = { env: { ...process.env } };
 
@@ -83,6 +86,7 @@ export default class Action {
     }
 
     core.info("Encrypted successfully...");
+    core.info(out);
   }
 
   /**
@@ -94,6 +98,8 @@ export default class Action {
    */
   async #decrypt() {
     this.#configurePrivateKey();
+
+    this.#debugFileContent(this.#filePath);
 
     const command = `${ejson} decrypt ${this.#filePath}`;
     const opts = { env: { ...process.env } };
@@ -137,6 +143,19 @@ export default class Action {
 
     const keyPath = `/opt/ejson/keys/${publicKey}`;
 
+    core.info(`Creating file ${keyPath}`);
+
     fs.writeFileSync(keyPath, this.#privateKey, "utf-8");
+  }
+
+  #debugFileContent(filePath) {
+    if (process.env.EJSON_DEBUG !== "true") {
+      return;
+    }
+
+    const content = fs.readFileSync(filePath);
+
+    core.info(`[${this.#action}] File content: ${filePath}`);
+    core.info(content.toString());
   }
 }
