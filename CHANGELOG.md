@@ -1,3 +1,8 @@
+## v0.2.2 (2024-01-16)
+
+
+- fix: finish process with error if commands fail by any reason (#5)
+
 ## v0.2.1 (2023-11-03)
 
 
