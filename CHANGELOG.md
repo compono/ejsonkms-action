@@ -1,3 +1,8 @@
+## v0.3.0 (2024-04-17)
+
+
+- feat: add build and pusblish in registry job (#6)
+
 ## v0.2.2 (2024-01-16)
 
 
