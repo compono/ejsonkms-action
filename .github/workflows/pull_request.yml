@@ -9,12 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.5
 
       - name: Install NodeJS
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "20"
 
       - name: Install dependencies
         run: npm install
@@ -23,28 +23,29 @@ jobs:
         run: npm run lint
 
   # test:
-    # name: Test
-    # runs-on: ubuntu-latest
-    # steps:
-      # - name: Checkout
-        # uses: actions/checkout@v4
+  #   name: Test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4.1.5
 
-      # - name: Install NodeJS
-        # uses: actions/setup-node@v3
-        # with:
-          # node-version: "20"
+  #     - name: Install NodeJS
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: "20"
 
-      # - name: Install dependencies
-        # run: npm install
+  #     - name: Install dependencies
+  #       run: npm install
 
-      # - name: Execute tests
-        # run: npm run test
+  #     - name: Lint
+  #       run: npm run test
+
 
   commit_lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v4.1.5
         with:
           token: "${{ secrets.ACCESS_TOKEN }}"
           fetch-depth: 0
