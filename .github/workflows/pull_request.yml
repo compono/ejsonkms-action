@@ -40,7 +40,6 @@ jobs:
   #     - name: Lint
   #       run: npm run test
 
-
   commit_lint:
     runs-on: ubuntu-latest
     steps:
