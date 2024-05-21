@@ -1,11 +1,11 @@
-import fs from 'fs';
-import util from 'util';
-import cp from 'child_process';
-import lodash from 'lodash';
-import core from '@actions/core';
+import fs from "fs";
+import util from "util";
+import cp from "child_process";
+import lodash from "lodash";
+import core from "@actions/core";
 
 // The ejson command used for encryption and decryption
-const ejson = 'ejson';
+const ejson = "ejson";
 
 export default class Action {
   #action;
@@ -21,7 +21,7 @@ export default class Action {
    * @param {string} privateKey Optional private key for encryption.
    * @param {string} outFile Path to a destination file were the decrypted content should be placed.
    */
-  constructor(action, filePath, privateKey = '', outFile = '') {
+  constructor(action, filePath, privateKey = "", outFile = "") {
     this.exec = util.promisify(cp.exec);
 
     this.#action = action;
@@ -52,11 +52,11 @@ export default class Action {
    */
   async run() {
     switch (this.#action) {
-      case 'encrypt':
-        return await this.encrypt();
+      case "encrypt":
+        return await this.#encrypt();
 
-      case 'decrypt':
-        return await this.decrypt();
+      case "decrypt":
+        return await this.#decrypt();
 
       default:
         throw new Error(`Invalid action '${this.#action}'`);
@@ -70,8 +70,8 @@ export default class Action {
    *
    * @returns {Promise<string>} - The encrypted content.
    */
-  async encrypt() {
-    this.debugFileContent(this.#filePath);
+  async #encrypt() {
+    this.#debugFileContent(this.#filePath);
 
     const command = `${ejson} encrypt ${this.#filePath}`;
     const opts = { env: { ...process.env } };
@@ -85,7 +85,7 @@ export default class Action {
       throw new Error(err);
     }
 
-    core.info('Encrypted successfully...');
+    core.info("Encrypted successfully...");
     core.info(out);
   }
 
@@ -96,10 +96,10 @@ export default class Action {
    *
    * @returns {Promise<void>}
    */
-  async decrypt() {
-    this.configurePrivateKey();
+  async #decrypt() {
+    this.#configurePrivateKey();
 
-    this.debugFileContent(this.#filePath);
+    this.#debugFileContent(this.#filePath);
 
     const command = `${ejson} decrypt ${this.#filePath}`;
     const opts = { env: { ...process.env } };
@@ -114,12 +114,12 @@ export default class Action {
     }
 
     if (!lodash.isEmpty(this.#outFile)) {
-      fs.writeFileSync(this.#outFile, out, 'utf-8');
+      fs.writeFileSync(this.#outFile, out, "utf-8");
     }
 
-    core.setOutput('decrypted', out);
+    core.setOutput("decrypted", out);
 
-    core.info('Decrypted successfully...');
+    core.info("Decrypted successfully...");
   }
 
   /**
@@ -128,28 +128,28 @@ export default class Action {
    * @throws {Error} Private key is not configured
    * @throws {Error} Public key is not present on ejson file
    */
-  configurePrivateKey() {
+  #configurePrivateKey() {
     if (lodash.isEmpty(this.#privateKey)) {
-      throw new Error('No provided private key for encryption');
+      throw new Error("No provided private key for encryption");
     }
 
-    const data = JSON.parse(fs.readFileSync(this.#filePath, 'utf8'));
+    const data = JSON.parse(fs.readFileSync(this.#filePath, "utf8"));
 
-    const publicKey = data['_public_key'];
+    const publicKey = data["_public_key"];
 
     if (!publicKey) {
-      throw new Error('Not found public key in ejson file');
+      throw new Error("Not found public key in ejson file");
     }
 
     const keyPath = `/opt/ejson/keys/${publicKey}`;
 
     core.info(`Creating file ${keyPath}`);
 
-    fs.writeFileSync(keyPath, this.#privateKey, 'utf-8');
+    fs.writeFileSync(keyPath, this.#privateKey, "utf-8");
   }
 
-  debugFileContent(filePath) {
-    if (process.env.EJSON_DEBUG !== 'true') {
+  #debugFileContent(filePath) {
+    if (process.env.EJSON_DEBUG !== "true") {
       return;
     }
 
