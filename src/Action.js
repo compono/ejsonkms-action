@@ -4,8 +4,8 @@ import cp from "child_process";
 import lodash from "lodash";
 import core from "@actions/core";
 
-// The ejson command used for encryption and decryption
-const ejson = "ejson";
+// The ejsonkms command used for encryption and decryption
+const ejsonkms = "ejsonkms";
 
 export default class Action {
   #action;
@@ -73,7 +73,7 @@ export default class Action {
   async #encrypt() {
     this.#debugFileContent(this.#filePath);
 
-    const command = `${ejson} encrypt ${this.#filePath}`;
+    const command = `${ejsonkms} encrypt ${this.#filePath}`;
     const opts = { env: { ...process.env } };
 
     const res = await this.exec(command, opts);
@@ -101,7 +101,7 @@ export default class Action {
 
     this.#debugFileContent(this.#filePath);
 
-    const command = `${ejson} decrypt ${this.#filePath}`;
+    const command = `${ejsonkms} decrypt ${this.#filePath}`;
     const opts = { env: { ...process.env } };
 
     const res = await this.exec(command, opts);

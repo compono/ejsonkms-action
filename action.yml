@@ -1,5 +1,5 @@
 name: "ejson action"
-description: "Execute encryption and decryption of json files using ejson"
+description: "Execute encryption and decryption of ejsonkms file"
 
 branding:
   icon: database
@@ -9,14 +9,17 @@ inputs:
   action:
     description: "Possible values should be encrypt or decrypt"
     required: true
-  file_path:
-    description: "Path to the source ejson file"
+  file-path:
+    description: "Path to the source ejsonkms file"
     required: true
-  private_key:
+  private-key:
     description: "Private key needed to decrypt action"
     required: false
-  out_file:
+  out-file:
     description: "File path to an out json file that should be use to place the decrypted content of the ejson"
+    required: false
+  populate-env-vars:
+    description: "Populate the environment variables with the decrypted key-pairs content"
     required: false
 
 outputs:
@@ -25,4 +28,4 @@ outputs:
 
 runs:
   using: "docker"
-  image: "Dockerfile"
+  image: "Containerfile"
