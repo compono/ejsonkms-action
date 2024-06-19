@@ -1,9 +1,5 @@
 FROM node:20
 
-ENV AWS_REGION
-ENV AWS_ACCESS_KEY_ID
-ENV AWS_SECRET_ACCESS_KEY
-
 LABEL "com.github.actions.icon"="blue"
 LABEL "com.github.actions.color"="database"
 LABEL "com.github.actions.name"="ejsonkms action"
