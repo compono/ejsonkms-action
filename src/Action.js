@@ -10,24 +10,33 @@ const ejsonkms = "ejsonkms";
 export default class Action {
   #action;
   #filePath;
-  #privateKey;
+  #awsRegion;
   #outFile;
+  #populateEnvVars;
 
   /**
    * Create a new Action instance.
    *
    * @param {string} action The action to perform (encrypt or decrypt).
    * @param {string} filePath The path to the JSON file.
-   * @param {string} privateKey Optional private key for encryption.
+   * @param {string} awsRegion AWS region (required for decryption).
    * @param {string} outFile Path to a destination file were the decrypted content should be placed.
+   * @param {string} populateEnvVars Optional - Populate environment variables with decrypted content.
    */
-  constructor(action, filePath, privateKey = "", outFile = "") {
+  constructor(
+    action,
+    filePath,
+    awsRegion = "",
+    outFile = "",
+    populateEnvVars = false,
+  ) {
     this.exec = util.promisify(cp.exec);
 
     this.#action = action;
     this.#filePath = filePath;
-    this.#privateKey = privateKey;
+    this.#awsRegion = awsRegion;
     this.#outFile = outFile;
+    this.#populateEnvVars = populateEnvVars;
 
     this.#validate();
   }
@@ -64,9 +73,9 @@ export default class Action {
   }
 
   /**
-   * Encrypt the JSON file using the ejson command.
+   * Encrypt the JSON file using the ejsonkms command.
    *
-   * @throws {Error} An execution error occurs during ejson command
+   * @throws {Error} An execution error occurs during ejsonkms command
    *
    * @returns {Promise<string>} - The encrypted content.
    */
@@ -90,18 +99,16 @@ export default class Action {
   }
 
   /**
-   * Decrypt the JSON file using the ejson command and set the decrypted output.
+   * Decrypt the JSON file using the ejsonkms command and set the decrypted output.
    *
-   * @throws {Error} An execution error occurs during ejson command
+   * @throws {Error} An execution error occurs during ejsonkms command
    *
    * @returns {Promise<void>}
    */
   async #decrypt() {
-    this.#configurePrivateKey();
-
     this.#debugFileContent(this.#filePath);
 
-    const command = `${ejsonkms} decrypt ${this.#filePath}`;
+    const command = `${ejsonkms} decrypt --aws-region ${this.#awsRegion} ${this.#filePath}`;
     const opts = { env: { ...process.env } };
 
     const res = await this.exec(command, opts);
@@ -120,32 +127,6 @@ export default class Action {
     core.setOutput("decrypted", out);
 
     core.info("Decrypted successfully...");
-  }
-
-  /**
-   * Configure the private key for decryption.
-   *
-   * @throws {Error} Private key is not configured
-   * @throws {Error} Public key is not present on ejson file
-   */
-  #configurePrivateKey() {
-    if (lodash.isEmpty(this.#privateKey)) {
-      throw new Error("No provided private key for encryption");
-    }
-
-    const data = JSON.parse(fs.readFileSync(this.#filePath, "utf8"));
-
-    const publicKey = data["_public_key"];
-
-    if (!publicKey) {
-      throw new Error("Not found public key in ejson file");
-    }
-
-    const keyPath = `/opt/ejson/keys/${publicKey}`;
-
-    core.info(`Creating file ${keyPath}`);
-
-    fs.writeFileSync(keyPath, this.#privateKey, "utf-8");
   }
 
   #debugFileContent(filePath) {

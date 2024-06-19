@@ -2,7 +2,7 @@
   "name": "ejsonkms-action",
   "type": "module",
   "version": "0.0.1",
-  "description": "Simple action that decrypt/encrypt EJSON file",
+  "description": "Simple action that decrypt/encrypt EJSONKMS file",
   "scripts": {
     "lint": "npx eslint --fix .",
     "format": "npx prettier --write .",

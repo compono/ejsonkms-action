@@ -1,4 +1,4 @@
-name: "ejson action"
+name: "ejsokms action"
 description: "Execute encryption and decryption of ejsonkms file"
 
 branding:
@@ -12,8 +12,8 @@ inputs:
   file-path:
     description: "Path to the source ejsonkms file"
     required: true
-  private-key:
-    description: "Private key needed to decrypt action"
+  aws-region:
+    description: "AWS region. Only required if `action` is `decrypt`"
     required: false
   out-file:
     description: "File path to an out json file that should be use to place the decrypted content of the ejson"

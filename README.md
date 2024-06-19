@@ -1,6 +1,6 @@
 # ejsonkms-action
 
-Simple github action that helps to execute encryption and decryption of [ejsonkms](https://github.com/envato/ejsonkms) file of which private key is encrypted with AWS KMS
+Simple github action that helps to execute encryption and decryption of [ejsonkms](https://github.com/envato/ejsonkms) file
 
 ## Configuration
 
@@ -10,8 +10,8 @@ Simple github action that helps to execute encryption and decryption of [ejsonkm
   with:
     action: decrypt # [encrypt, decrypt]
     file-path: <path-to-ejsonkms-file>
-    private-key: <private-key-string> # needed if encrypt is used as action
     out-file: <path-to-json-file> # File where the decrypted content will be stored (optional)
+    aws-region: <region> # AWS region which is required by decrypt mode (optional)
     populate-env-vars: true | false # Populate the environment variables with the decrypted key-pairs content (optional)
 ```
 
@@ -41,8 +41,8 @@ jobs:
         AWS_SECRET_ACCESS_KEY: <redacted>
       with:
         action: decrypt
+        aws-region: ${{ env.AWS_REGION }}
         file-path: <path-to-ejsonkms-file>
-        private-key: <private-key-string>
         out-file: <path-to-json-file>
 
     - name: Decrypted content
@@ -62,7 +62,6 @@ jobs:
       with:
         action: encrypt
         file-path: <path-to-ejsonkms-file>
-        private-key: <private-key-string>
 
     - name: Encrypted content
       run: |
