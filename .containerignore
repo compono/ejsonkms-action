@@ -1,3 +1,4 @@
+install_deps.sh
 .github/
 .cz.toml
 .eslintrc.json
