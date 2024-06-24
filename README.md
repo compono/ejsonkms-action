@@ -69,6 +69,37 @@ jobs:
         cat <path-to-ejson-file>
 ```
 
+Another great feature is to populate environment variable with the decrypted key-value pairs:
+
+```yaml
+# just imagine that the ejsonkms file has following key-value pairs:
+# KEY1: "encryped_value"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Decrypt file and populate GITHUB_ENV
+      uses: compono/ejsonkms-action@main
+      id: decrypt
+      env:
+        AWS_REGION: <aws-region>
+        AWS_ACCESS_KEY_ID: <key-id>
+        AWS_SECRET_ACCESS_KEY: <redacted>
+      with:
+        action: decrypt
+        aws-region: ${{ env.AWS_REGION }}
+        file-path: <path-to-ejsonkms-file>
+        populate-env-vars: true
+
+    - name: List env vars
+      run:
+        echo "${{ env.KEY1 }}"
+```
+
 ## Credits
 
 * Based on the [ejson-action](https://github.com/Drafteame/ejson-action)

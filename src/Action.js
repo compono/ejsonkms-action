@@ -23,20 +23,14 @@ export default class Action {
    * @param {string} outFile Path to a destination file were the decrypted content should be placed.
    * @param {string} populateEnvVars Optional - Populate environment variables with decrypted content.
    */
-  constructor(
-    action,
-    filePath,
-    awsRegion = "",
-    outFile = "",
-    populateEnvVars = false,
-  ) {
+  constructor(action, filePath, awsRegion = "", outFile = "", populateEnvVars) {
     this.exec = util.promisify(cp.exec);
 
     this.#action = action;
     this.#filePath = filePath;
     this.#awsRegion = awsRegion;
     this.#outFile = outFile;
-    this.#populateEnvVars = populateEnvVars;
+    this.#populateEnvVars = populateEnvVars.toLowerCase() === "true";
 
     this.#validate();
   }
@@ -125,6 +119,26 @@ export default class Action {
     }
 
     core.setOutput("decrypted", out);
+
+    if (this.#populateEnvVars) {
+      core.info("Populating environment variables...")
+      try {
+        const decryptedJSON = JSON.parse(out);
+
+        if (lodash.isEmpty(decryptedJSON.environment)) {
+          throw new Error("Could not find `environment` key in the EJSON file");
+        }
+
+        lodash.forOwn(decryptedJSON.environment, (value, key) => {
+          core.info(`Setting environment variable ${key} ...`);
+
+          core.setSecret(value);
+          core.exportVariable(key, value);
+        });
+      } catch (e) {
+        throw new Error(e);
+      }
+    }
 
     core.info("Decrypted successfully...");
   }

@@ -15,10 +15,3 @@ curl -sLo ejsonkms.tar.gz https://github.com/envato/ejsonkms/releases/download/v
   mv ejsonkms /usr/local/bin/ && \
   chmod +x /usr/local/bin/ejsonkms && \
   rm ejsonkms.tar.gz
-
-echo "Install ejson2env.."
-curl -sLo ejson2env.tar.gz https://github.com/Shopify/ejson2env/releases/download/v2.0.6/ejson2env_2.0.6_linux_$architecture.tar.gz && \
-  tar xfvz ejson2env.tar.gz &>/dev/null && \
-  mv ejson2env /usr/local/bin/ && \
-  chmod +x /usr/local/bin/ejson2env && \
-  rm ejson2env.tar.gz
