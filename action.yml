@@ -21,6 +21,9 @@ inputs:
   populate-env-vars:
     description: "Populate the environment variables with the decrypted key-pairs content"
     required: false
+  prefix-env-vars:
+    description: "Add a prefix to the environment variables"
+    required: false
 
 outputs:
   decrypted:

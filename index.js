@@ -9,6 +9,7 @@ const main = async () => {
     core.getInput("aws-region"),
     core.getInput("out-file"),
     core.getInput("populate-env-vars"),
+    core.getInput("prefix-env-vars"),
   );
 
   try {

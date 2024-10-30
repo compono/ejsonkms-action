@@ -13,6 +13,7 @@ Simple github action that helps to execute encryption and decryption of [ejsonkm
     out-file: <path-to-json-file> # File where the decrypted content will be stored (optional)
     aws-region: <region> # AWS region which is required by decrypt mode (optional)
     populate-env-vars: true | false # Populate the environment variables with the decrypted key-pairs content (optional)
+    prefix-env-vars: <prefix> # Add prefix to environment variables (optional)
 ```
 
 ### Outputs

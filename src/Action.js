@@ -13,6 +13,7 @@ export default class Action {
   #awsRegion;
   #outFile;
   #populateEnvVars;
+  #prefixEnvVars;
 
   /**
    * Create a new Action instance.
@@ -22,8 +23,9 @@ export default class Action {
    * @param {string} awsRegion AWS region (required for decryption).
    * @param {string} outFile Path to a destination file were the decrypted content should be placed.
    * @param {string} populateEnvVars Optional - Populate environment variables with decrypted content.
+   * @param {string} prefixEnvVars Optional - Add prefix to environment variables.
    */
-  constructor(action, filePath, awsRegion = "", outFile = "", populateEnvVars) {
+  constructor(action, filePath, awsRegion = "", outFile = "", populateEnvVars, prefixEnvVars = "") {
     this.exec = util.promisify(cp.exec);
 
     this.#action = action;
@@ -31,6 +33,7 @@ export default class Action {
     this.#awsRegion = awsRegion;
     this.#outFile = outFile;
     this.#populateEnvVars = populateEnvVars.toLowerCase() === "true";
+    this.#prefixEnvVars = prefixEnvVars;
 
     this.#validate();
   }
@@ -130,10 +133,11 @@ export default class Action {
         }
 
         lodash.forOwn(decryptedJSON.environment, (value, key) => {
-          core.info(`Setting environment variable ${key} ...`);
+          const keyName = this.#prefixEnvVars ? `${this.#prefixEnvVars}${key}` : key;
+          core.info(`Setting environment variable ${keyName} ...`);
 
           core.setSecret(value);
-          core.exportVariable(key, value);
+          core.exportVariable(keyName, value);
         });
       } catch (e) {
         throw new Error(e);
