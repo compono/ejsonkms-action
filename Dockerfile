@@ -1,4 +1,4 @@
-FROM node:20
+FROM public.ecr.aws/docker/library/node:20
 
 LABEL "com.github.actions.icon"="blue"
 LABEL "com.github.actions.color"="database"
