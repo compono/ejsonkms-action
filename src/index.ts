@@ -1,6 +1,5 @@
 import core from "@actions/core";
-
-import Action from "./src/Action.js";
+import Action from "./Action";
 
 const main = async () => {
   const action = new Action(
@@ -14,11 +13,12 @@ const main = async () => {
 
   try {
     await action.run();
-  } catch (e) {
-    core.error(
-      `[ERROR] Failure on ejsonkms ${core.getInput("action")}: ${e.message}`,
-    );
-
+  } catch (error) {
+    if (error instanceof Error) {
+      core.error(
+        `[ERROR] Failure on ejsonkms ${core.getInput("action")}: ${error.message}`,
+      );
+    }
     process.exit(1);
   }
 };

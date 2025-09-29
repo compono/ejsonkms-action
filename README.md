@@ -33,6 +33,9 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
+    - name: Install ejsonkms
+      uses: compono/setup-ejsonkms-action@main
+
     - name: Decrypt file
       uses: compono/ejsonkms-action@main
       id: decrypt
@@ -82,6 +85,9 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
+
+    - name: Install ejsonkms
+      uses: compono/setup-ejsonkms-action@main
 
     - name: Decrypt file and populate GITHUB_ENV
       uses: compono/ejsonkms-action@main

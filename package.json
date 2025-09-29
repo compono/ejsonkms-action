@@ -1,9 +1,14 @@
 {
   "name": "ejsonkms-action",
+  "version": "0.0.4",
   "type": "module",
-  "version": "0.0.1",
   "description": "Simple action that decrypt/encrypt EJSONKMS file",
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
+    "build": "ncc build -o dist src/index.ts",
     "lint": "npx eslint --fix .",
     "format": "npx prettier --write .",
     "test": "mocha ./tests/**/*.test.js",
@@ -29,18 +34,22 @@
   },
   "homepage": "https://github.com/compono/ejsonkms-action",
   "dependencies": {
-    "@actions/core": "^1.10.1",
+    "@actions/core": "^1.11.1",
     "child_process": "^1.0.2",
     "fs": "^0.0.1-security",
     "lodash": "^4.17.21",
     "util": "^0.12.5"
   },
   "devDependencies": {
+    "@types/node": "^22",
+    "@types/lodash": "^4.17.20",
     "eslint": "^8.52.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-prettier": "^5.0.1",
-    "prettier": "^3.0.3"
+    "prettier": "^3.0.3",
+    "@vercel/ncc": "^0.38.3",
+    "typescript": "^5.4.2"
   }
 }
