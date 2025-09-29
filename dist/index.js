@@ -42814,10 +42814,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 var _Action_instances, _Action_action, _Action_filePath, _Action_awsRegion, _Action_outFile, _Action_populateEnvVars, _Action_prefixEnvVars, _Action_validate, _Action_encrypt, _Action_decrypt, _Action_debugFileContent;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fs_1 = __importDefault(__nccwpck_require__(9896));
-const util_1 = __importDefault(__nccwpck_require__(9023));
 const lodash_1 = __importDefault(__nccwpck_require__(2356));
 const core = __importStar(__nccwpck_require__(7484));
-const child_process_1 = __importDefault(__nccwpck_require__(5317));
+const exec = __importStar(__nccwpck_require__(5236));
 // The ejsonkms command used for encryption and decryption
 const ejsonkms = "ejsonkms";
 class Action {
@@ -42874,37 +42873,39 @@ _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsReg
 }, _Action_encrypt = function _Action_encrypt() {
     return __awaiter(this, void 0, void 0, function* () {
         __classPrivateFieldGet(this, _Action_instances, "m", _Action_debugFileContent).call(this, __classPrivateFieldGet(this, _Action_filePath, "f"));
-        const exec = util_1.default.promisify(child_process_1.default.exec);
-        const command = `${ejsonkms} encrypt ${__classPrivateFieldGet(this, _Action_filePath, "f")}`;
+        const args = ["encrypt", __classPrivateFieldGet(this, _Action_filePath, "f")];
         const opts = { env: Object.assign({}, process.env) };
-        const res = yield exec(command, opts);
-        const out = res.stdout.toString();
-        const err = res.stderr.toString();
-        if (!lodash_1.default.isEmpty(err)) {
-            throw new Error(err);
+        try {
+            const { stdout, stderr, exitCode } = yield exec.getExecOutput(ejsonkms, args, opts);
+            if (exitCode > 0) {
+                throw new Error(stderr);
+            }
+            core.info("Encrypted successfully...");
+            core.info(stdout.trim());
         }
-        core.info("Encrypted successfully...");
-        core.info(out);
+        catch (err) {
+            if (err instanceof Error) {
+                core.error(`[ERROR] Failure on ejsonkms encrypt: ${err.message}`);
+            }
+        }
     });
 }, _Action_decrypt = function _Action_decrypt() {
     return __awaiter(this, void 0, void 0, function* () {
         __classPrivateFieldGet(this, _Action_instances, "m", _Action_debugFileContent).call(this, __classPrivateFieldGet(this, _Action_filePath, "f"));
-        const exec = util_1.default.promisify(child_process_1.default.exec);
-        const command = `${ejsonkms} decrypt --aws-region ${__classPrivateFieldGet(this, _Action_awsRegion, "f")} ${__classPrivateFieldGet(this, _Action_filePath, "f")}`;
+        const args = ["decrypt", "--aws-region", __classPrivateFieldGet(this, _Action_awsRegion, "f"), __classPrivateFieldGet(this, _Action_filePath, "f")];
         const opts = { env: Object.assign({}, process.env) };
-        const res = yield exec(command, opts);
-        const out = res.stdout.toString();
-        const err = res.stderr.toString();
-        if (!lodash_1.default.isEmpty(err)) {
-            throw new Error(err);
-        }
-        if (!lodash_1.default.isEmpty(__classPrivateFieldGet(this, _Action_outFile, "f"))) {
-            fs_1.default.writeFileSync(__classPrivateFieldGet(this, _Action_outFile, "f"), out, "utf-8");
-        }
-        core.setOutput("decrypted", out);
-        if (__classPrivateFieldGet(this, _Action_populateEnvVars, "f")) {
-            core.info("Populating environment variables...");
-            try {
+        try {
+            const { stdout, stderr, exitCode } = yield exec.getExecOutput(ejsonkms, args, opts);
+            if (exitCode > 0) {
+                throw new Error(stderr);
+            }
+            const out = stdout.trim();
+            if (!lodash_1.default.isEmpty(__classPrivateFieldGet(this, _Action_outFile, "f"))) {
+                fs_1.default.writeFileSync(__classPrivateFieldGet(this, _Action_outFile, "f"), out, "utf-8");
+            }
+            core.setOutput("decrypted", out);
+            if (__classPrivateFieldGet(this, _Action_populateEnvVars, "f")) {
+                core.info("Populating environment variables...");
                 const decryptedJSON = JSON.parse(out);
                 if (lodash_1.default.isEmpty(decryptedJSON.environment)) {
                     throw new Error("Could not find `environment` key in the EJSON file");
@@ -42918,13 +42919,13 @@ _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsReg
                     core.exportVariable(keyName, value);
                 });
             }
-            catch (e) {
-                if (e instanceof Error) {
-                    core.error(`[ERROR] Failure on ejsonkms decrypt: ${e.message}`);
-                }
+            core.info("Decrypted successfully...");
+        }
+        catch (err) {
+            if (err instanceof Error) {
+                core.error(`[ERROR] Failure on ejsonkms decrypt: ${err.message}`);
             }
         }
-        core.info("Decrypted successfully...");
     });
 }, _Action_debugFileContent = function _Action_debugFileContent(filePath) {
     if (process.env.EJSON_DEBUG !== "true") {
