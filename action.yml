@@ -28,7 +28,6 @@ inputs:
 outputs:
   decrypted:
     description: "Decrypted JSON content"
-    value: "decrypt"
 
 runs:
   using: "node20"
