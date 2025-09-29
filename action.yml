@@ -32,4 +32,5 @@ outputs:
 
 runs:
   using: "node20"
+  pre: "install-deps.js"
   main: "dist/index.js"
