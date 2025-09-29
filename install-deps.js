@@ -12,10 +12,10 @@ const __dirname = path.dirname(__filename);
 
 try {
   // Step 0: Run `npm ci`
-  console.log('🔧 Running npm ci...');
-  execSync('npm ci', { stdio: 'inherit' });
+  console.log('🔧 Running npm instlal...');
+  execSync('npm install', { stdio: 'inherit' });
 } catch (err) {
-  console.error('❌ npm ci failed:', err.message);
+  console.error('❌ npm install failed:', err.message);
   process.exit(1);
 }
 
