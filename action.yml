@@ -30,6 +30,6 @@ outputs:
     description: "Decrypted JSON content"
 
 runs:
-  using: "node22"
+  using: "node20"
   pre: "install-deps.js"
   main: "index.js"
