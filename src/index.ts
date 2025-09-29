@@ -1,13 +1,13 @@
 import fs from "fs";
 import util from "util";
-import cp from "child_process";
 import lodash from "lodash";
-import core from "@actions/core";
+import * as core from "@actions/core";
+import * as exec from "@actions/exec";
 
 // The ejsonkms command used for encryption and decryption
 const ejsonkms = "ejsonkms";
 
-export default class Action {
+class Action {
   #action;
   #filePath;
   #awsRegion;
@@ -25,9 +25,14 @@ export default class Action {
    * @param {string} populateEnvVars Optional - Populate environment variables with decrypted content.
    * @param {string} prefixEnvVars Optional - Add prefix to environment variables.
    */
-  constructor(action, filePath, awsRegion = "", outFile = "", populateEnvVars, prefixEnvVars = "") {
-    this.exec = util.promisify(cp.exec);
-
+  constructor(
+    action,
+    filePath,
+    awsRegion = "",
+    outFile = "",
+    populateEnvVars,
+    prefixEnvVars = "",
+  ) {
     this.#action = action;
     this.#filePath = filePath;
     this.#awsRegion = awsRegion;
@@ -79,20 +84,27 @@ export default class Action {
   async #encrypt() {
     this.#debugFileContent(this.#filePath);
 
-    const command = `${ejsonkms} encrypt ${this.#filePath}`;
-    const opts = { env: { ...process.env } };
+    const args = ["encrypt", this.#filePath];
+    const opts = { env: { ...process.env } } as exec.ExecOptions;
 
-    const res = await this.exec(command, opts);
+    try {
+      const { stdout, stderr, exitCode } = await exec.getExecOutput(
+        ejsonkms,
+        args,
+        opts,
+      );
 
-    const out = res.stdout.toString();
-    const err = res.stderr.toString();
+      if (exitCode > 0) {
+        throw new Error(stderr);
+      }
 
-    if (!lodash.isEmpty(err)) {
-      throw new Error(err);
+      core.info("Encrypted successfully...");
+      core.info(stdout.trim());
+    } catch (err) {
+      if (err instanceof Error) {
+        core.error(`[ERROR] Failure on ejsonkms encrypt: ${err.message}`);
+      }
     }
-
-    core.info("Encrypted successfully...");
-    core.info(out);
   }
 
   /**
@@ -105,27 +117,28 @@ export default class Action {
   async #decrypt() {
     this.#debugFileContent(this.#filePath);
 
-    const command = `${ejsonkms} decrypt --aws-region ${this.#awsRegion} ${this.#filePath}`;
-    const opts = { env: { ...process.env } };
+    const args = ["decrypt", "--aws-region", this.#awsRegion, this.#filePath];
+    const opts = { env: { ...process.env } } as exec.ExecOptions;
 
-    const res = await this.exec(command, opts);
+    try {
+      const { stdout, stderr, exitCode } = await exec.getExecOutput(
+        ejsonkms,
+        args,
+        opts,
+      );
 
-    const out = res.stdout.toString();
-    const err = res.stderr.toString();
+      if (exitCode > 0) {
+        throw new Error(stderr);
+      }
 
-    if (!lodash.isEmpty(err)) {
-      throw new Error(err);
-    }
+      const out = stdout.trim();
+      if (!lodash.isEmpty(this.#outFile)) {
+        fs.writeFileSync(this.#outFile, out, "utf-8");
+      }
 
-    if (!lodash.isEmpty(this.#outFile)) {
-      fs.writeFileSync(this.#outFile, out, "utf-8");
-    }
-
-    core.setOutput("decrypted", out);
-
-    if (this.#populateEnvVars) {
-      core.info("Populating environment variables...")
-      try {
+      core.setOutput("decrypted", out);
+      if (this.#populateEnvVars) {
+        core.info("Populating environment variables...");
         const decryptedJSON = JSON.parse(out);
 
         if (lodash.isEmpty(decryptedJSON.environment)) {
@@ -133,18 +146,21 @@ export default class Action {
         }
 
         lodash.forOwn(decryptedJSON.environment, (value, key) => {
-          const keyName = this.#prefixEnvVars ? `${this.#prefixEnvVars}${key}` : key;
+          const keyName = this.#prefixEnvVars
+            ? `${this.#prefixEnvVars}${key}`
+            : key;
           core.info(`Setting environment variable ${keyName} ...`);
 
           core.setSecret(value);
           core.exportVariable(keyName, value);
         });
-      } catch (e) {
-        throw new Error(e);
+      }
+      core.info("Decrypted successfully...");
+    } catch (err) {
+      if (err instanceof Error) {
+        core.error(`[ERROR] Failure on ejsonkms decrypt: ${err.message}`);
       }
     }
-
-    core.info("Decrypted successfully...");
   }
 
   #debugFileContent(filePath) {
@@ -158,3 +174,27 @@ export default class Action {
     core.info(content.toString());
   }
 }
+
+const main = async () => {
+  const action = new Action(
+    core.getInput("action"),
+    core.getInput("file-path"),
+    core.getInput("aws-region"),
+    core.getInput("out-file"),
+    core.getInput("populate-env-vars"),
+    core.getInput("prefix-env-vars"),
+  );
+
+  try {
+    await action.run();
+  } catch (error) {
+    if (error instanceof Error) {
+      core.error(
+        `[ERROR] Failure on ejsonkms ${core.getInput("action")}: ${error.message}`,
+      );
+    }
+    process.exit(1);
+  }
+};
+
+main();
