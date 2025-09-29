@@ -30,5 +30,6 @@ outputs:
     description: "Decrypted JSON content"
 
 runs:
-  using: "docker"
-  image: "Dockerfile"
+  using: "node22"
+  pre: "install-deps.js"
+  main: "index.js"
