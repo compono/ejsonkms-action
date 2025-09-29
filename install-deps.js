@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 
-const os = require('os');
-const https = require('https');
-const fs = require('fs');
-const { execSync } = require('child_process');
-const path = require('path');
+import os from 'os';
+import https from 'https';
+import fs from 'fs';
+import { execSync } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// __dirname workaround for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Step 1: Determine architecture
 const machine = os.arch();
