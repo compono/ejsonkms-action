@@ -10,6 +10,15 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+try {
+  // Step 0: Run `npm ci`
+  console.log('🔧 Running npm ci...');
+  execSync('npm ci', { stdio: 'inherit' });
+} catch (err) {
+  console.error('❌ npm ci failed:', err.message);
+  process.exit(1);
+}
+
 // Step 1: Determine architecture
 const machine = os.arch();
 let architecture = '';
