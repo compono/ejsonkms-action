@@ -42751,7 +42751,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 9617:
+/***/ 9407:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 
@@ -42934,38 +42934,14 @@ _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsReg
     core.info(`[${__classPrivateFieldGet(this, _Action_action, "f")}] File content: ${filePath}`);
     core.info(content.toString());
 };
-exports["default"] = Action;
-
-
-/***/ }),
-
-/***/ 9407:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core_1 = __importDefault(__nccwpck_require__(7484));
-const Action_1 = __importDefault(__nccwpck_require__(9617));
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
-    const action = new Action_1.default(core_1.default.getInput("action"), core_1.default.getInput("file-path"), core_1.default.getInput("aws-region"), core_1.default.getInput("out-file"), core_1.default.getInput("populate-env-vars"), core_1.default.getInput("prefix-env-vars"));
+    const action = new Action(core.getInput("action"), core.getInput("file-path"), core.getInput("aws-region"), core.getInput("out-file"), core.getInput("populate-env-vars"), core.getInput("prefix-env-vars"));
     try {
         yield action.run();
     }
     catch (error) {
         if (error instanceof Error) {
-            core_1.default.error(`[ERROR] Failure on ejsonkms ${core_1.default.getInput("action")}: ${error.message}`);
+            core.error(`[ERROR] Failure on ejsonkms ${core.getInput("action")}: ${error.message}`);
         }
         process.exit(1);
     }
