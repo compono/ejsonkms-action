@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import os from 'os';
-import https from 'https';
 import fs from 'fs';
 import { execSync } from 'child_process';
 import path from 'path';
@@ -29,45 +28,26 @@ switch (machine) {
 
 console.log('Installing ejsonkms...');
 
-// Step 2: Define download URL and filenames
+// Step 2: Define version and URL
 const version = '0.2.2';
 const filename = `ejsonkms_${version}_linux_${architecture}.tar.gz`;
 const url = `https://github.com/envato/ejsonkms/releases/download/v${version}/${filename}`;
-const outputFile = path.join(__dirname, 'ejsonkms.tar.gz');
+const tarball = path.join(__dirname, 'ejsonkms.tar.gz');
 
-// Step 3: Download file
-function download(url, dest, callback) {
-  const file = fs.createWriteStream(dest);
-  https.get(url, (response) => {
-    if (response.statusCode !== 200) {
-      console.error(`Failed to download: ${url}`);
-      process.exit(1);
-    }
-    response.pipe(file);
-    file.on('finish', () => {
-      file.close(callback);
-    });
-  }).on('error', (err) => {
-    fs.unlink(dest, () => {}); // Delete the file on error
-    console.error('Error downloading file:', err.message);
-    process.exit(1);
-  });
+try {
+  // Step 3: Download file using curl
+  console.log(`Downloading ${url}...`);
+  execSync(`curl -sLo "${tarball}" "${url}"`, { stdio: 'inherit' });
+
+  // Step 4: Extract, move, chmod, and cleanup
+  execSync(`tar xfvz "${tarball}"`, { stdio: 'ignore' });
+  execSync('mv ejsonkms /usr/local/bin/');
+  execSync('chmod +x /usr/local/bin/ejsonkms');
+  fs.unlinkSync(tarball);
+
+  console.log('✅ ejsonkms installed successfully.');
+} catch (err) {
+  console.error('❌ Installation failed:', err.message);
+  process.exit(1);
 }
-
-// Step 4: Extract, move, chmod, and cleanup
-function installBinary() {
-  try {
-    execSync('tar xfvz ejsonkms.tar.gz', { stdio: 'ignore' });
-    execSync('mv ejsonkms /usr/local/bin/');
-    execSync('chmod +x /usr/local/bin/ejsonkms');
-    fs.unlinkSync('ejsonkms.tar.gz');
-    console.log('ejsonkms installed successfully.');
-  } catch (err) {
-    console.error('Installation failed:', err.message);
-    process.exit(1);
-  }
-}
-
-// Run the steps
-download(url, outputFile, installBinary);
 
