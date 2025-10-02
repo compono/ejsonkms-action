@@ -36,6 +36,8 @@
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
+    "@actions/io": "^1.1.1",
+    "@actions/tool-cache": "^1.1.1",
     "fs": "^0.0.1-security",
     "lodash": "^4.17.21",
     "util": "^0.12.5"

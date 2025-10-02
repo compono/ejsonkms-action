@@ -1,8 +1,57 @@
 import fs from "fs";
-import util from "util";
 import lodash from "lodash";
+import os from "os";
+import path from "path";
+
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
+import * as io from "@actions/io";
+import * as tc from "@actions/tool-cache";
+
+async function install() {
+  const machine = os.arch();
+  let architecture = "";
+
+  switch (machine) {
+    case "x64":
+      architecture = "amd64";
+      break;
+    case "arm64":
+      architecture = "arm64";
+      break;
+    default:
+      console.error(`${machine} Unsupported platform`);
+      process.exit(1);
+  }
+
+  core.info("Install ejsonkms...");
+
+  const destination = path.join(os.homedir(), ".ejsonkms", "bin");
+  core.debug(`Install destination is ${destination}`);
+
+  await io
+    .rmRF(path.join(destination))
+    .catch()
+    .then(() => {
+      core.debug(`Successfully deleted pre-existing ${path.join(destination)}`);
+    });
+
+  await io.mkdirP(destination);
+  core.debug(`Successfully created ${destination}`);
+
+  const version = "0.2.7";
+  const filename = `ejsonkms_${version}_linux_${architecture}.tar.gz`;
+  const url = `https://github.com/envato/ejsonkms/releases/latest/download/${filename}`;
+
+  const downloaded = await tc.downloadTool(url);
+  core.debug(`successfully downloaded ejsonkms to ${downloaded}`);
+
+  const extractedPath = await tc.extractTar(downloaded, destination);
+  core.debug(`Successfully extracted ${downloaded} to ${extractedPath}`);
+
+  const cachedPath = await tc.cacheDir(destination, "ejsonkms", version);
+  core.addPath(cachedPath);
+}
 
 // The ejsonkms command used for encryption and decryption
 const ejsonkms = "ejsonkms";
@@ -85,7 +134,7 @@ class Action {
     this.#debugFileContent(this.#filePath);
 
     const args = ["encrypt", this.#filePath];
-    const opts = { env: { ...process.env } } as exec.ExecOptions;
+    const opts = { env: { ...process.env }, silent: true } as exec.ExecOptions;
 
     try {
       const { stdout, stderr, exitCode } = await exec.getExecOutput(
@@ -118,7 +167,7 @@ class Action {
     this.#debugFileContent(this.#filePath);
 
     const args = ["decrypt", "--aws-region", this.#awsRegion, this.#filePath];
-    const opts = { env: { ...process.env } } as exec.ExecOptions;
+    const opts = { env: { ...process.env }, silent: true } as exec.ExecOptions;
 
     try {
       const { stdout, stderr, exitCode } = await exec.getExecOutput(
@@ -176,6 +225,8 @@ class Action {
 }
 
 const main = async () => {
+  await install();
+
   const action = new Action(
     core.getInput("action"),
     core.getInput("file-path"),
