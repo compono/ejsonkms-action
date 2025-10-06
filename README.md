@@ -14,6 +14,8 @@ Simple github action that helps to execute encryption and decryption of [ejsonkm
     aws-region: <region> # AWS region which is required by decrypt mode (optional)
     populate-env-vars: true | false # Populate the environment variables with the decrypted key-pairs content (optional)
     prefix-env-vars: <prefix> # Add prefix to environment variables (optional)
+    populate-outputs: true | false # Populate the outputs with the decrypted key-pairs content (optional)
+    prefix-outputs: <prefix> # Add prefix to outputs (optional)
 ```
 
 ### Outputs
@@ -31,8 +33,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v4
-
+      uses: actions/checkout@v5
     - name: Decrypt file
       uses: compono/ejsonkms-action@main
       id: decrypt
@@ -70,7 +71,7 @@ jobs:
         cat <path-to-ejson-file>
 ```
 
-Another great feature is to populate environment variable with the decrypted key-value pairs:
+Another great feature is to populate environment variables with the decrypted key-value pairs:
 
 ```yaml
 # just imagine that the ejsonkms file has following key-value pairs:
@@ -81,8 +82,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v4
-
+      uses: actions/checkout@v5
     - name: Decrypt file and populate GITHUB_ENV
       uses: compono/ejsonkms-action@main
       id: decrypt
@@ -99,6 +99,36 @@ jobs:
     - name: List env vars
       run:
         echo "${{ env.KEY1 }}"
+```
+
+Alternatively if you prefer GitHub outputs:
+
+```yaml
+# just imagine that the ejsonkms file has following key-value pairs:
+# KEY1: "encryped_value"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v5
+    - name: Decrypt file and populate GITHUB_ENV
+      uses: compono/ejsonkms-action@main
+      id: decrypt
+      env:
+        AWS_REGION: <aws-region>
+        AWS_ACCESS_KEY_ID: <key-id>
+        AWS_SECRET_ACCESS_KEY: <redacted>
+      with:
+        action: decrypt
+        aws-region: ${{ env.AWS_REGION }}
+        file-path: <path-to-ejsonkms-file>
+        populate-outputs: true
+
+    - name: List env vars
+      run:
+        echo "${{ steps.decrypt.outputs.KEY1 }}"
 ```
 
 ## Credits

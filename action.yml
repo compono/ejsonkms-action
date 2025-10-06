@@ -24,6 +24,12 @@ inputs:
   prefix-env-vars:
     description: "Add a prefix to the environment variables"
     required: false
+  populate-outputs:
+    description: "Populate the outputs with the decrypted key-pairs content"
+    required: false
+  prefix-outputs:
+    description: "Add a prefix to the outputs"
+    required: false
 
 outputs:
   decrypted:
