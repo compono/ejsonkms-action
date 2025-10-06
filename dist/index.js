@@ -46088,7 +46088,7 @@ function install() {
         core.debug(`Successfully created ${destination}`);
         const version = "0.2.8";
         const filename = `ejsonkms_${version}_linux_${architecture}.tar.gz`;
-        const url = `https://github.com/envato/ejsonkms/releases/latest/download/${filename}`;
+        const url = `https://github.com/envato/ejsonkms/releases/download/v${version}/${filename}`;
         const downloaded = yield tc.downloadTool(url);
         core.debug(`successfully downloaded ejsonkms to ${downloaded}`);
         const extractedPath = yield tc.extractTar(downloaded, destination);
