@@ -44,7 +44,7 @@ async function install() {
 
   const version = "0.2.8";
   const filename = `ejsonkms_${version}_linux_${architecture}.tar.gz`;
-  const url = `https://github.com/envato/ejsonkms/releases/latest/download/${filename}`;
+  const url = `https://github.com/envato/ejsonkms/releases/download/v${version}/${filename}`
 
   const downloaded = await tc.downloadTool(url);
   core.debug(`successfully downloaded ejsonkms to ${downloaded}`);
