@@ -46112,7 +46112,7 @@ class Action {
      * @param {string} prefixEnvVars Optional - Add prefix to environment variables.
      * @param {string} prefixOutputs Optional - Add prefix to outputs.
      */
-    constructor(action, filePath, awsRegion = "", outFile = "", populateEnvVars, populateOutputs, prefixEnvVars = "", prefixOutputs = "") {
+    constructor(action, filePath, awsRegion = "", outFile = "", populateEnvVars = false, populateOutputs = false, prefixEnvVars = "", prefixOutputs = "") {
         _Action_instances.add(this);
         _Action_action.set(this, void 0);
         _Action_filePath.set(this, void 0);
@@ -46126,9 +46126,9 @@ class Action {
         __classPrivateFieldSet(this, _Action_filePath, filePath, "f");
         __classPrivateFieldSet(this, _Action_awsRegion, awsRegion, "f");
         __classPrivateFieldSet(this, _Action_outFile, outFile, "f");
-        __classPrivateFieldSet(this, _Action_populateEnvVars, populateEnvVars.toLowerCase() === "true", "f");
+        __classPrivateFieldSet(this, _Action_populateEnvVars, populateEnvVars, "f");
         __classPrivateFieldSet(this, _Action_prefixEnvVars, prefixEnvVars, "f");
-        __classPrivateFieldSet(this, _Action_populateOutputs, populateOutputs.toLowerCase() === "true", "f");
+        __classPrivateFieldSet(this, _Action_populateOutputs, populateOutputs, "f");
         __classPrivateFieldSet(this, _Action_prefixOutputs, prefixOutputs, "f");
         __classPrivateFieldGet(this, _Action_instances, "m", _Action_validate).call(this);
     }
@@ -46175,7 +46175,7 @@ _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsReg
         }
         catch (err) {
             if (err instanceof Error) {
-                core.error(`[ERROR] Failure on ejsonkms encrypt: ${err.message}`);
+                core.setFailed(`[ERROR] Failure on ejsonkms encrypt: ${err.message}`);
             }
         }
     });
@@ -46224,7 +46224,7 @@ _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsReg
         }
         catch (err) {
             if (err instanceof Error) {
-                core.error(`[ERROR] Failure on ejsonkms decrypt: ${err.message}`);
+                core.setFailed(`[ERROR] Failure on ejsonkms decrypt: ${err.message}`);
             }
         }
     });
@@ -46238,15 +46238,14 @@ _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsReg
 };
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     yield install();
-    const action = new Action(core.getInput("action"), core.getInput("file-path"), core.getInput("aws-region"), core.getInput("out-file"), core.getInput("populate-env-vars"), core.getInput("populate-outputs"), core.getInput("prefix-env-vars"), core.getInput("prefix-outputs"));
+    const action = new Action(core.getInput("action"), core.getInput("file-path"), core.getInput("aws-region"), core.getInput("out-file"), core.getBooleanInput("populate-env-vars"), core.getBooleanInput("populate-outputs"), core.getInput("prefix-env-vars"), core.getInput("prefix-outputs"));
     try {
         yield action.run();
     }
     catch (error) {
         if (error instanceof Error) {
-            core.error(`[ERROR] Failure on ejsonkms ${core.getInput("action")}: ${error.message}`);
+            core.setFailed(`[ERROR] Failure on ejsonkms ${core.getInput("action")}: ${error.message}`);
         }
-        process.exit(1);
     }
 });
 main();

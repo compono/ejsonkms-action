@@ -44,7 +44,7 @@ async function install() {
 
   const version = "0.2.8";
   const filename = `ejsonkms_${version}_linux_${architecture}.tar.gz`;
-  const url = `https://github.com/envato/ejsonkms/releases/download/v${version}/${filename}`
+  const url = `https://github.com/envato/ejsonkms/releases/download/v${version}/${filename}`;
 
   const downloaded = await tc.downloadTool(url);
   core.debug(`successfully downloaded ejsonkms to ${downloaded}`);
@@ -86,8 +86,8 @@ class Action {
     filePath,
     awsRegion = "",
     outFile = "",
-    populateEnvVars,
-    populateOutputs,
+    populateEnvVars = false,
+    populateOutputs = false,
     prefixEnvVars = "",
     prefixOutputs = "",
   ) {
@@ -95,9 +95,9 @@ class Action {
     this.#filePath = filePath;
     this.#awsRegion = awsRegion;
     this.#outFile = outFile;
-    this.#populateEnvVars = populateEnvVars.toLowerCase() === "true";
+    this.#populateEnvVars = populateEnvVars;
     this.#prefixEnvVars = prefixEnvVars;
-    this.#populateOutputs = populateOutputs.toLowerCase() === "true";
+    this.#populateOutputs = populateOutputs;
     this.#prefixOutputs = prefixOutputs;
 
     this.#validate();
@@ -173,7 +173,7 @@ class Action {
       core.info(stdout.trim());
     } catch (err) {
       if (err instanceof Error) {
-        core.error(`[ERROR] Failure on ejsonkms encrypt: ${err.message}`);
+        core.setFailed(`[ERROR] Failure on ejsonkms encrypt: ${err.message}`);
       }
     }
   }
@@ -245,7 +245,7 @@ class Action {
       }
     } catch (err) {
       if (err instanceof Error) {
-        core.error(`[ERROR] Failure on ejsonkms decrypt: ${err.message}`);
+        core.setFailed(`[ERROR] Failure on ejsonkms decrypt: ${err.message}`);
       }
     }
   }
@@ -270,8 +270,8 @@ const main = async () => {
     core.getInput("file-path"),
     core.getInput("aws-region"),
     core.getInput("out-file"),
-    core.getInput("populate-env-vars"),
-    core.getInput("populate-outputs"),
+    core.getBooleanInput("populate-env-vars"),
+    core.getBooleanInput("populate-outputs"),
     core.getInput("prefix-env-vars"),
     core.getInput("prefix-outputs"),
   );
@@ -280,11 +280,10 @@ const main = async () => {
     await action.run();
   } catch (error) {
     if (error instanceof Error) {
-      core.error(
+      core.setFailed(
         `[ERROR] Failure on ejsonkms ${core.getInput("action")}: ${error.message}`,
       );
     }
-    process.exit(1);
   }
 };
 
