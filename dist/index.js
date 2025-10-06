@@ -46047,7 +46047,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _Action_instances, _Action_action, _Action_filePath, _Action_awsRegion, _Action_outFile, _Action_populateEnvVars, _Action_prefixEnvVars, _Action_validate, _Action_encrypt, _Action_decrypt, _Action_debugFileContent;
+var _Action_instances, _Action_action, _Action_filePath, _Action_awsRegion, _Action_outFile, _Action_populateEnvVars, _Action_populateOutputs, _Action_prefixEnvVars, _Action_prefixOutputs, _Action_validate, _Action_validateEnviromentPropertyExistence, _Action_encrypt, _Action_decrypt, _Action_debugFileContent;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fs_1 = __importDefault(__nccwpck_require__(9896));
 const lodash_1 = __importDefault(__nccwpck_require__(2356));
@@ -46068,6 +46068,9 @@ function install() {
             case "arm64":
                 architecture = "arm64";
                 break;
+            case "ppc64le":
+                architecture = "ppc64le";
+                break;
             default:
                 console.error(`${machine} Unsupported platform`);
                 process.exit(1);
@@ -46083,7 +46086,7 @@ function install() {
         });
         yield io.mkdirP(destination);
         core.debug(`Successfully created ${destination}`);
-        const version = "0.2.7";
+        const version = "0.2.8";
         const filename = `ejsonkms_${version}_linux_${architecture}.tar.gz`;
         const url = `https://github.com/envato/ejsonkms/releases/latest/download/${filename}`;
         const downloaded = yield tc.downloadTool(url);
@@ -46105,22 +46108,28 @@ class Action {
      * @param {string} awsRegion AWS region (required for decryption).
      * @param {string} outFile Path to a destination file were the decrypted content should be placed.
      * @param {string} populateEnvVars Optional - Populate environment variables with decrypted content.
+     * @param {string} populateOutputs Optional - Populate outputs with decrypted content.
      * @param {string} prefixEnvVars Optional - Add prefix to environment variables.
+     * @param {string} prefixOutputs Optional - Add prefix to outputs.
      */
-    constructor(action, filePath, awsRegion = "", outFile = "", populateEnvVars, prefixEnvVars = "") {
+    constructor(action, filePath, awsRegion = "", outFile = "", populateEnvVars, populateOutputs, prefixEnvVars = "", prefixOutputs = "") {
         _Action_instances.add(this);
         _Action_action.set(this, void 0);
         _Action_filePath.set(this, void 0);
         _Action_awsRegion.set(this, void 0);
         _Action_outFile.set(this, void 0);
         _Action_populateEnvVars.set(this, void 0);
+        _Action_populateOutputs.set(this, void 0);
         _Action_prefixEnvVars.set(this, void 0);
+        _Action_prefixOutputs.set(this, void 0);
         __classPrivateFieldSet(this, _Action_action, action, "f");
         __classPrivateFieldSet(this, _Action_filePath, filePath, "f");
         __classPrivateFieldSet(this, _Action_awsRegion, awsRegion, "f");
         __classPrivateFieldSet(this, _Action_outFile, outFile, "f");
         __classPrivateFieldSet(this, _Action_populateEnvVars, populateEnvVars.toLowerCase() === "true", "f");
         __classPrivateFieldSet(this, _Action_prefixEnvVars, prefixEnvVars, "f");
+        __classPrivateFieldSet(this, _Action_populateOutputs, populateOutputs.toLowerCase() === "true", "f");
+        __classPrivateFieldSet(this, _Action_prefixOutputs, prefixOutputs, "f");
         __classPrivateFieldGet(this, _Action_instances, "m", _Action_validate).call(this);
     }
     /**
@@ -46143,9 +46152,13 @@ class Action {
         });
     }
 }
-_Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsRegion = new WeakMap(), _Action_outFile = new WeakMap(), _Action_populateEnvVars = new WeakMap(), _Action_prefixEnvVars = new WeakMap(), _Action_instances = new WeakSet(), _Action_validate = function _Action_validate() {
+_Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsRegion = new WeakMap(), _Action_outFile = new WeakMap(), _Action_populateEnvVars = new WeakMap(), _Action_populateOutputs = new WeakMap(), _Action_prefixEnvVars = new WeakMap(), _Action_prefixOutputs = new WeakMap(), _Action_instances = new WeakSet(), _Action_validate = function _Action_validate() {
     if (!fs_1.default.existsSync(__classPrivateFieldGet(this, _Action_filePath, "f"))) {
         throw new Error(`JSON file does not exist at path: ${__classPrivateFieldGet(this, _Action_filePath, "f")}`);
+    }
+}, _Action_validateEnviromentPropertyExistence = function _Action_validateEnviromentPropertyExistence(decryptedJSON) {
+    if (lodash_1.default.isEmpty(decryptedJSON.environment)) {
+        throw new Error("Could not find `environment` key in the EJSON file");
     }
 }, _Action_encrypt = function _Action_encrypt() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -46176,17 +46189,29 @@ _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsReg
             if (exitCode > 0) {
                 throw new Error(stderr);
             }
+            core.info("Decrypted successfully...");
             const out = stdout.trim();
             if (!lodash_1.default.isEmpty(__classPrivateFieldGet(this, _Action_outFile, "f"))) {
                 fs_1.default.writeFileSync(__classPrivateFieldGet(this, _Action_outFile, "f"), out, "utf-8");
             }
             core.setOutput("decrypted", out);
+            const decryptedJSON = JSON.parse(out);
+            if (__classPrivateFieldGet(this, _Action_populateOutputs, "f") || __classPrivateFieldGet(this, _Action_populateEnvVars, "f")) {
+                __classPrivateFieldGet(this, _Action_instances, "m", _Action_validateEnviromentPropertyExistence).call(this, decryptedJSON);
+            }
+            if (__classPrivateFieldGet(this, _Action_populateOutputs, "f")) {
+                core.info("Populating outputs...");
+                lodash_1.default.forOwn(decryptedJSON.environment, (value, key) => {
+                    const keyName = __classPrivateFieldGet(this, _Action_prefixOutputs, "f")
+                        ? `${__classPrivateFieldGet(this, _Action_prefixOutputs, "f")}${key}`
+                        : key;
+                    core.info(`Setting output ${keyName} ...`);
+                    core.setSecret(value);
+                    core.setOutput(keyName, value);
+                });
+            }
             if (__classPrivateFieldGet(this, _Action_populateEnvVars, "f")) {
                 core.info("Populating environment variables...");
-                const decryptedJSON = JSON.parse(out);
-                if (lodash_1.default.isEmpty(decryptedJSON.environment)) {
-                    throw new Error("Could not find `environment` key in the EJSON file");
-                }
                 lodash_1.default.forOwn(decryptedJSON.environment, (value, key) => {
                     const keyName = __classPrivateFieldGet(this, _Action_prefixEnvVars, "f")
                         ? `${__classPrivateFieldGet(this, _Action_prefixEnvVars, "f")}${key}`
@@ -46196,7 +46221,6 @@ _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsReg
                     core.exportVariable(keyName, value);
                 });
             }
-            core.info("Decrypted successfully...");
         }
         catch (err) {
             if (err instanceof Error) {
@@ -46214,7 +46238,7 @@ _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsReg
 };
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     yield install();
-    const action = new Action(core.getInput("action"), core.getInput("file-path"), core.getInput("aws-region"), core.getInput("out-file"), core.getInput("populate-env-vars"), core.getInput("prefix-env-vars"));
+    const action = new Action(core.getInput("action"), core.getInput("file-path"), core.getInput("aws-region"), core.getInput("out-file"), core.getInput("populate-env-vars"), core.getInput("populate-outputs"), core.getInput("prefix-env-vars"), core.getInput("prefix-outputs"));
     try {
         yield action.run();
     }

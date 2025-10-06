@@ -19,6 +19,9 @@ async function install() {
     case "arm64":
       architecture = "arm64";
       break;
+    case "ppc64le":
+      architecture = "ppc64le";
+      break;
     default:
       console.error(`${machine} Unsupported platform`);
       process.exit(1);
@@ -39,7 +42,7 @@ async function install() {
   await io.mkdirP(destination);
   core.debug(`Successfully created ${destination}`);
 
-  const version = "0.2.7";
+  const version = "0.2.8";
   const filename = `ejsonkms_${version}_linux_${architecture}.tar.gz`;
   const url = `https://github.com/envato/ejsonkms/releases/latest/download/${filename}`;
 
@@ -62,7 +65,9 @@ class Action {
   #awsRegion;
   #outFile;
   #populateEnvVars;
+  #populateOutputs;
   #prefixEnvVars;
+  #prefixOutputs;
 
   /**
    * Create a new Action instance.
@@ -72,7 +77,9 @@ class Action {
    * @param {string} awsRegion AWS region (required for decryption).
    * @param {string} outFile Path to a destination file were the decrypted content should be placed.
    * @param {string} populateEnvVars Optional - Populate environment variables with decrypted content.
+   * @param {string} populateOutputs Optional - Populate outputs with decrypted content.
    * @param {string} prefixEnvVars Optional - Add prefix to environment variables.
+   * @param {string} prefixOutputs Optional - Add prefix to outputs.
    */
   constructor(
     action,
@@ -80,7 +87,9 @@ class Action {
     awsRegion = "",
     outFile = "",
     populateEnvVars,
+    populateOutputs,
     prefixEnvVars = "",
+    prefixOutputs = "",
   ) {
     this.#action = action;
     this.#filePath = filePath;
@@ -88,6 +97,8 @@ class Action {
     this.#outFile = outFile;
     this.#populateEnvVars = populateEnvVars.toLowerCase() === "true";
     this.#prefixEnvVars = prefixEnvVars;
+    this.#populateOutputs = populateOutputs.toLowerCase() === "true";
+    this.#prefixOutputs = prefixOutputs;
 
     this.#validate();
   }
@@ -100,6 +111,17 @@ class Action {
   #validate() {
     if (!fs.existsSync(this.#filePath)) {
       throw new Error(`JSON file does not exist at path: ${this.#filePath}`);
+    }
+  }
+
+  /**
+   * Validate the existence of the `environment` property in the JSON
+   *
+   * @throws {Error} Property does not exists
+   */
+  #validateEnviromentPropertyExistence(decryptedJSON) {
+    if (lodash.isEmpty(decryptedJSON.environment)) {
+      throw new Error("Could not find `environment` key in the EJSON file");
     }
   }
 
@@ -180,19 +202,36 @@ class Action {
         throw new Error(stderr);
       }
 
+      core.info("Decrypted successfully...");
+
       const out = stdout.trim();
       if (!lodash.isEmpty(this.#outFile)) {
         fs.writeFileSync(this.#outFile, out, "utf-8");
       }
 
       core.setOutput("decrypted", out);
+      const decryptedJSON = JSON.parse(out);
+
+      if (this.#populateOutputs || this.#populateEnvVars) {
+        this.#validateEnviromentPropertyExistence(decryptedJSON);
+      }
+
+      if (this.#populateOutputs) {
+        core.info("Populating outputs...");
+
+        lodash.forOwn(decryptedJSON.environment, (value, key) => {
+          const keyName = this.#prefixOutputs
+            ? `${this.#prefixOutputs}${key}`
+            : key;
+          core.info(`Setting output ${keyName} ...`);
+
+          core.setSecret(value);
+          core.setOutput(keyName, value);
+        });
+      }
+
       if (this.#populateEnvVars) {
         core.info("Populating environment variables...");
-        const decryptedJSON = JSON.parse(out);
-
-        if (lodash.isEmpty(decryptedJSON.environment)) {
-          throw new Error("Could not find `environment` key in the EJSON file");
-        }
 
         lodash.forOwn(decryptedJSON.environment, (value, key) => {
           const keyName = this.#prefixEnvVars
@@ -204,7 +243,6 @@ class Action {
           core.exportVariable(keyName, value);
         });
       }
-      core.info("Decrypted successfully...");
     } catch (err) {
       if (err instanceof Error) {
         core.error(`[ERROR] Failure on ejsonkms decrypt: ${err.message}`);
@@ -233,7 +271,9 @@ const main = async () => {
     core.getInput("aws-region"),
     core.getInput("out-file"),
     core.getInput("populate-env-vars"),
+    core.getInput("populate-outputs"),
     core.getInput("prefix-env-vars"),
+    core.getInput("prefix-outputs"),
   );
 
   try {
