@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import fs from "fs";
 import lodash from "lodash";
 import os from "os";
@@ -5,8 +6,93 @@ import path from "path";
 
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
+import * as http from "@actions/http-client";
 import * as io from "@actions/io";
 import * as tc from "@actions/tool-cache";
+
+interface ReleaseAsset {
+  name: string;
+  digest: string;
+  browser_download_url: string;
+}
+
+interface ReleaseResponse {
+  assets: ReleaseAsset[];
+}
+
+/**
+ * Fetch the expected SHA256 checksum for an asset from GitHub's release API.
+ *
+ * @param version - The release version (e.g., "0.0.4")
+ * @param filename - The asset filename to look up
+ * @returns The SHA256 hash string (without "sha256:" prefix)
+ * @throws Error if the asset is not found or API request fails
+ */
+async function fetchExpectedChecksum(
+  version: string,
+  filename: string,
+): Promise<string> {
+  const client = new http.HttpClient("ejsonkms-action");
+  const apiUrl = `https://api.github.com/repos/runlevel5/ejsonkms-rs/releases/tags/v${version}`;
+
+  core.debug(`Fetching release info from ${apiUrl}`);
+
+  const response = await client.getJson<ReleaseResponse>(apiUrl);
+
+  if (!response.result) {
+    throw new Error(`Failed to fetch release info for v${version}`);
+  }
+
+  const asset = response.result.assets.find((a) => a.name === filename);
+
+  if (!asset) {
+    throw new Error(`Asset ${filename} not found in release v${version}`);
+  }
+
+  if (!asset.digest) {
+    throw new Error(`No checksum available for ${filename}`);
+  }
+
+  // digest format is "sha256:hash", extract just the hash
+  const checksum = asset.digest.replace(/^sha256:/, "");
+  core.debug(`Expected checksum for ${filename}: ${checksum}`);
+
+  return checksum;
+}
+
+/**
+ * Compute the SHA256 checksum of a file.
+ *
+ * @param filePath - Path to the file to hash
+ * @returns The SHA256 hash as a hex string
+ */
+function computeFileChecksum(filePath: string): string {
+  const fileBuffer = fs.readFileSync(filePath);
+  const hash = crypto.createHash("sha256").update(fileBuffer).digest("hex");
+  return hash;
+}
+
+/**
+ * Verify the checksum of a downloaded file against the expected value.
+ *
+ * @param filePath - Path to the downloaded file
+ * @param expectedChecksum - Expected SHA256 hash
+ * @throws Error if checksums don't match
+ */
+function verifyChecksum(filePath: string, expectedChecksum: string): void {
+  const actualChecksum = computeFileChecksum(filePath);
+  core.debug(`Actual checksum: ${actualChecksum}`);
+
+  if (actualChecksum !== expectedChecksum) {
+    throw new Error(
+      `Checksum verification failed!\n` +
+        `Expected: ${expectedChecksum}\n` +
+        `Actual:   ${actualChecksum}`,
+    );
+  }
+
+  core.info("Checksum verification passed");
+}
 
 async function install() {
   const machine = os.arch();
@@ -14,13 +100,13 @@ async function install() {
 
   switch (machine) {
     case "x64":
-      architecture = "amd64";
+      architecture = "x86_64-unknown-linux-gnu";
       break;
     case "arm64":
-      architecture = "arm64";
+      architecture = "aarch64-unknown-linux-gnu";
       break;
     case "ppc64le":
-      architecture = "ppc64le";
+      architecture = "powerpc64le-unknown-linux-gnu";
       break;
     default:
       console.error(`${machine} Unsupported platform`);
@@ -42,14 +128,20 @@ async function install() {
   await io.mkdirP(destination);
   core.debug(`Successfully created ${destination}`);
 
-  const version = "0.2.8";
-  const filename = `ejsonkms_${version}_linux_${architecture}.tar.gz`;
-  const url = `https://github.com/envato/ejsonkms/releases/download/v${version}/${filename}`;
+  const version = "0.0.4";
+  const filename = `ejsonkms-${version}-${architecture}.tar.xz`;
+  const url = `https://github.com/runlevel5/ejsonkms-rs/releases/download/v${version}/${filename}`;
+
+  // Fetch expected checksum from GitHub API
+  const expectedChecksum = await fetchExpectedChecksum(version, filename);
 
   const downloaded = await tc.downloadTool(url);
-  core.debug(`successfully downloaded ejsonkms to ${downloaded}`);
+  core.debug(`Successfully downloaded ejsonkms to ${downloaded}`);
 
-  const extractedPath = await tc.extractTar(downloaded, destination);
+  // Verify checksum before extracting
+  verifyChecksum(downloaded, expectedChecksum);
+
+  const extractedPath = await tc.extractTar(downloaded, destination, "xJ");
   core.debug(`Successfully extracted ${downloaded} to ${extractedPath}`);
 
   const cachedPath = await tc.cacheDir(destination, "ejsonkms", version);

@@ -1,6 +1,6 @@
 {
   "name": "ejsonkms-action",
-  "version": "0.0.4",
+  "version": "0.0.9",
   "type": "module",
   "description": "Simple action that decrypt/encrypt EJSONKMS file",
   "main": "dist/index.js",
@@ -12,7 +12,10 @@
     "lint": "npx eslint --fix .",
     "format": "npx prettier --write .",
     "test": "mocha ./tests/**/*.test.js",
-    "pre-commit": "pre-commit install --hook-type commit-msg"
+    "pre-commit": "pre-commit install --hook-type commit-msg",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "npm run build && changeset publish"
   },
   "repository": {
     "type": "git",
@@ -27,7 +30,7 @@
     "ejson",
     "kms"
   ],
-  "author": "Trung Lê <trung.le@compono.com>",
+  "author": "Trung Lê <8@tle.id.au>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/compono/ejsonkms-action/issues"
@@ -36,6 +39,7 @@
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
+    "@actions/http-client": "^3.0.1",
     "@actions/io": "^1.1.1",
     "@actions/tool-cache": "^1.1.1",
     "fs": "^0.0.1-security",
@@ -43,17 +47,18 @@
     "util": "^0.12.5"
   },
   "devDependencies": {
-    "@types/node": "^22",
+    "@changesets/cli": "^2.29.8",
     "@types/lodash": "^4.17.20",
+    "@types/node": "^22",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.45.0",
+    "@vercel/ncc": "^0.38.3",
     "eslint": "^8.52.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-prettier": "^5.0.1",
     "prettier": "^3.0.3",
-    "@vercel/ncc": "^0.38.3",
     "typescript": "^5.4.2"
   }
 }
