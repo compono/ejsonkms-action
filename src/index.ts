@@ -49,7 +49,7 @@ async function install() {
   const downloaded = await tc.downloadTool(url);
   core.debug(`successfully downloaded ejsonkms to ${downloaded}`);
 
-  const extractedPath = await tc.extractTar(downloaded, destination);
+  const extractedPath = await tc.extractTar(downloaded, destination, "xJ");
   core.debug(`Successfully extracted ${downloaded} to ${extractedPath}`);
 
   const cachedPath = await tc.cacheDir(destination, "ejsonkms", version);

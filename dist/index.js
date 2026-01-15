@@ -46091,7 +46091,7 @@ function install() {
         const url = `https://github.com/runlevel5/ejsonkms-rs/releases/download/v${version}/${filename}`;
         const downloaded = yield tc.downloadTool(url);
         core.debug(`successfully downloaded ejsonkms to ${downloaded}`);
-        const extractedPath = yield tc.extractTar(downloaded, destination);
+        const extractedPath = yield tc.extractTar(downloaded, destination, "xJ");
         core.debug(`Successfully extracted ${downloaded} to ${extractedPath}`);
         const cachedPath = yield tc.cacheDir(destination, "ejsonkms", version);
         core.addPath(cachedPath);
