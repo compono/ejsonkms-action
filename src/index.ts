@@ -14,13 +14,13 @@ async function install() {
 
   switch (machine) {
     case "x64":
-      architecture = "amd64";
+      architecture = "x86_64-unknown-linux-gnu";
       break;
     case "arm64":
-      architecture = "arm64";
+      architecture = "aarch64-unknown-linux-gnu";
       break;
     case "ppc64le":
-      architecture = "ppc64le";
+      architecture = "powerpc64le-unknown-linux-gnu";
       break;
     default:
       console.error(`${machine} Unsupported platform`);
@@ -42,9 +42,9 @@ async function install() {
   await io.mkdirP(destination);
   core.debug(`Successfully created ${destination}`);
 
-  const version = "0.2.8";
-  const filename = `ejsonkms_${version}_linux_${architecture}.tar.gz`;
-  const url = `https://github.com/envato/ejsonkms/releases/download/v${version}/${filename}`;
+  const version = "0.0.4";
+  const filename = `ejsonkms-${version}-${architecture}.tar.xz`;
+  const url = `https://github.com/runlevel5/ejsonkms-rs/releases/download/v${version}/${filename}`;
 
   const downloaded = await tc.downloadTool(url);
   core.debug(`successfully downloaded ejsonkms to ${downloaded}`);
