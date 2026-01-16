@@ -13,6 +13,32 @@ import * as tc from "@actions/tool-cache";
 
 type FileType = "json" | "yaml";
 
+// Reserved environment variables that should not be overwritten
+const RESERVED_ENV_VARS = new Set([
+  "PATH",
+  "HOME",
+  "USER",
+  "SHELL",
+  // "GITHUB_TOKEN",
+  "GITHUB_WORKSPACE",
+  "GITHUB_REPOSITORY",
+  "GITHUB_ACTION",
+  "GITHUB_ACTOR",
+  "GITHUB_SHA",
+  "GITHUB_REF",
+  "GITHUB_ENV",
+  "GITHUB_PATH",
+  "GITHUB_OUTPUT",
+  "GITHUB_STATE",
+  "RUNNER_TEMP",
+  "RUNNER_TOOL_CACHE",
+  "AWS_ACCESS_KEY_ID",
+  "AWS_SECRET_ACCESS_KEY",
+  "AWS_SESSION_TOKEN",
+  "AWS_REGION",
+  "AWS_DEFAULT_REGION",
+]);
+
 interface ReleaseAsset {
   name: string;
   digest: string;
@@ -190,9 +216,22 @@ function parseContent(
   fileType: FileType,
 ): Record<string, unknown> {
   if (fileType === "yaml") {
-    return yaml.load(content) as Record<string, unknown>;
+    return yaml.load(content, { schema: yaml.JSON_SCHEMA }) as Record<
+      string,
+      unknown
+    >;
   }
   return JSON.parse(content);
+}
+
+/**
+ * Validate that an environment variable name is safe to use.
+ *
+ * @param name - The environment variable name to validate
+ * @returns true if safe, false if reserved
+ */
+function isReservedEnvVar(name: string): boolean {
+  return RESERVED_ENV_VARS.has(name.toUpperCase());
 }
 
 class Action {
@@ -349,6 +388,7 @@ class Action {
         fs.writeFileSync(this.#outFile, out, "utf-8");
       }
 
+      core.setSecret(out);
       core.setOutput("decrypted", out);
       const decryptedContent = parseContent(out, this.#fileType);
 
@@ -377,6 +417,16 @@ class Action {
           const keyName = this.#prefixEnvVars
             ? `${this.#prefixEnvVars}${key}`
             : key;
+
+          // Check for reserved environment variables to prevent injection attacks
+          if (isReservedEnvVar(keyName)) {
+            core.warning(
+              `Skipping reserved environment variable "${keyName}" to prevent security issues. ` +
+                `Reserved variables cannot be overwritten.`,
+            );
+            return;
+          }
+
           core.info(`Setting environment variable ${keyName} ...`);
 
           core.setSecret(value);
@@ -390,10 +440,15 @@ class Action {
     }
   }
 
-  #debugFileContent(filePath) {
+  #debugFileContent(filePath: string) {
     if (process.env.EJSON_DEBUG !== "true") {
       return;
     }
+
+    core.warning(
+      "⚠️ EJSON_DEBUG is enabled. File contents will be logged which may expose sensitive data. " +
+        "Do NOT use this in production workflows!",
+    );
 
     const content = fs.readFileSync(filePath);
 

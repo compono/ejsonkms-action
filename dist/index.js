@@ -51013,6 +51013,31 @@ const exec = __importStar(__nccwpck_require__(5236));
 const http = __importStar(__nccwpck_require__(4844));
 const io = __importStar(__nccwpck_require__(4994));
 const tc = __importStar(__nccwpck_require__(3472));
+// Reserved environment variables that should not be overwritten
+const RESERVED_ENV_VARS = new Set([
+    "PATH",
+    "HOME",
+    "USER",
+    "SHELL",
+    // "GITHUB_TOKEN",
+    "GITHUB_WORKSPACE",
+    "GITHUB_REPOSITORY",
+    "GITHUB_ACTION",
+    "GITHUB_ACTOR",
+    "GITHUB_SHA",
+    "GITHUB_REF",
+    "GITHUB_ENV",
+    "GITHUB_PATH",
+    "GITHUB_OUTPUT",
+    "GITHUB_STATE",
+    "RUNNER_TEMP",
+    "RUNNER_TOOL_CACHE",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_SESSION_TOKEN",
+    "AWS_REGION",
+    "AWS_DEFAULT_REGION",
+]);
 /**
  * Fetch the expected SHA256 checksum for an asset from GitHub's release API.
  *
@@ -51147,9 +51172,18 @@ function detectFileType(filePath) {
  */
 function parseContent(content, fileType) {
     if (fileType === "yaml") {
-        return js_yaml_1.default.load(content);
+        return js_yaml_1.default.load(content, { schema: js_yaml_1.default.JSON_SCHEMA });
     }
     return JSON.parse(content);
+}
+/**
+ * Validate that an environment variable name is safe to use.
+ *
+ * @param name - The environment variable name to validate
+ * @returns true if safe, false if reserved
+ */
+function isReservedEnvVar(name) {
+    return RESERVED_ENV_VARS.has(name.toUpperCase());
 }
 class Action {
     /**
@@ -51213,7 +51247,7 @@ _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsReg
     }
 }, _Action_validateEnviromentPropertyExistence = function _Action_validateEnviromentPropertyExistence(decryptedContent) {
     if (lodash_1.default.isEmpty(decryptedContent.environment)) {
-        throw new Error("Could not find `environment` key in the EJSON file");
+        throw new Error("Could not find `environment` key in the encrypted file");
     }
 }, _Action_encrypt = function _Action_encrypt() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -51249,6 +51283,7 @@ _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsReg
             if (!lodash_1.default.isEmpty(__classPrivateFieldGet(this, _Action_outFile, "f"))) {
                 fs_1.default.writeFileSync(__classPrivateFieldGet(this, _Action_outFile, "f"), out, "utf-8");
             }
+            core.setSecret(out);
             core.setOutput("decrypted", out);
             const decryptedContent = parseContent(out, __classPrivateFieldGet(this, _Action_fileType, "f"));
             if (__classPrivateFieldGet(this, _Action_populateOutputs, "f") || __classPrivateFieldGet(this, _Action_populateEnvVars, "f")) {
@@ -51271,6 +51306,12 @@ _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsReg
                     const keyName = __classPrivateFieldGet(this, _Action_prefixEnvVars, "f")
                         ? `${__classPrivateFieldGet(this, _Action_prefixEnvVars, "f")}${key}`
                         : key;
+                    // Check for reserved environment variables to prevent injection attacks
+                    if (isReservedEnvVar(keyName)) {
+                        core.warning(`Skipping reserved environment variable "${keyName}" to prevent security issues. ` +
+                            `Reserved variables cannot be overwritten.`);
+                        return;
+                    }
                     core.info(`Setting environment variable ${keyName} ...`);
                     core.setSecret(value);
                     core.exportVariable(keyName, value);
@@ -51287,6 +51328,8 @@ _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsReg
     if (process.env.EJSON_DEBUG !== "true") {
         return;
     }
+    core.warning("⚠️ EJSON_DEBUG is enabled. File contents will be logged which may expose sensitive data. " +
+        "Do NOT use this in production workflows!");
     const content = fs_1.default.readFileSync(filePath);
     core.info(`[${__classPrivateFieldGet(this, _Action_action, "f")}] File content: ${filePath}`);
     core.info(content.toString());
