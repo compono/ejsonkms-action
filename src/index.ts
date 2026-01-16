@@ -261,7 +261,7 @@ class Action {
    */
   #validateEnviromentPropertyExistence(decryptedContent) {
     if (lodash.isEmpty(decryptedContent.environment)) {
-      throw new Error("Could not find `environment` key in the EJSON file");
+      throw new Error("Could not find `environment` key in the encrypted file");
     }
   }
 
