@@ -12,8 +12,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     outputs:
-      published: ${{ steps.changesets.outputs.published }}
-      publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
+      hasChangesets: ${{ steps.changesets.outputs.hasChangesets }}
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
@@ -29,21 +28,20 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Create Release Pull Request or Tag
+      - name: Create Release Pull Request
         id: changesets
         uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba # v1
         with:
           version: npm run version
           commit: "chore: release"
           title: "chore: release"
-          publish: echo "publish"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   create-release:
     name: Create GitHub Release
     needs: release
-    if: needs.release.outputs.published == 'true'
+    if: needs.release.outputs.hasChangesets == 'false'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -55,7 +53,17 @@ jobs:
         id: pkg
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
+      - name: Check if tag exists
+        id: check-tag
+        run: |
+          if git rev-parse "v${{ steps.pkg.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create and push git tag
+        if: steps.check-tag.outputs.exists == 'false'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -63,6 +71,7 @@ jobs:
           git push origin "v${{ steps.pkg.outputs.version }}"
 
       - name: Create GitHub Release
+        if: steps.check-tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
         with:
           tag_name: v${{ steps.pkg.outputs.version }}
@@ -72,6 +81,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update major version tag
+        if: steps.check-tag.outputs.exists == 'false'
         run: |
           MAJOR_VERSION=$(echo "${{ steps.pkg.outputs.version }}" | cut -d. -f1)
           git tag -fa "v${MAJOR_VERSION}" -m "Update v${MAJOR_VERSION} tag"
