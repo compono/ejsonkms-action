@@ -2,6 +2,17 @@
 
 Simple GitHub action that helps to execute encryption and decryption of [ejsonkms](https://github.com/runlevel5/ejsonkms-rs) file
 
+## Requirements
+
+This action only supports **Linux** runners with **glibc**. The following architectures are supported:
+
+| Architecture    | Runner Examples                                 |
+| --------------- | ----------------------------------------------- |
+| x86_64 (amd64)  | `ubuntu-latest`, `ubuntu-22.04`, `ubuntu-24.04` |
+| aarch64 (arm64) | `ubuntu-24.04-arm`, self-hosted ARM64 runners   |
+
+**Note:** Alpine Linux and other musl-based distributions are not supported.
+
 ## Configuration
 
 ```yaml
