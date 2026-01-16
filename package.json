@@ -43,11 +43,13 @@
     "@actions/io": "^1.1.1",
     "@actions/tool-cache": "^1.1.1",
     "fs": "^0.0.1-security",
+    "js-yaml": "^4.1.1",
     "lodash": "^4.17.21",
     "util": "^0.12.5"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
+    "@types/js-yaml": "^4.0.9",
     "@types/lodash": "^4.17.20",
     "@types/node": "^22",
     "@typescript-eslint/eslint-plugin": "^8.45.0",

@@ -3,12 +3,15 @@ import fs from "fs";
 import lodash from "lodash";
 import os from "os";
 import path from "path";
+import yaml from "js-yaml";
 
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
 import * as http from "@actions/http-client";
 import * as io from "@actions/io";
 import * as tc from "@actions/tool-cache";
+
+type FileType = "json" | "yaml";
 
 interface ReleaseAsset {
   name: string;
@@ -151,6 +154,47 @@ async function install() {
 // The ejsonkms command used for encryption and decryption
 const ejsonkms = "ejsonkms";
 
+/**
+ * Detect file type based on file extension.
+ *
+ * @param filePath - Path to the file
+ * @returns "yaml" for .yaml/.yml files, "json" for all others
+ */
+function detectFileType(filePath: string): FileType {
+  const ext = path.extname(filePath).toLowerCase();
+  switch (ext) {
+    case ".yaml":
+    case ".yml":
+    case ".eyaml":
+    case ".eyml":
+      return "yaml";
+    case ".json":
+    case ".ejson":
+      return "json";
+    default:
+      throw new Error(
+        `Unsupported file extension '${ext}'. Supported extensions: .json, .ejson, .yaml, .yml, .eyaml, .eyml`,
+      );
+  }
+}
+
+/**
+ * Parse content based on file type.
+ *
+ * @param content - The string content to parse
+ * @param fileType - The type of file ("json" or "yaml")
+ * @returns The parsed object
+ */
+function parseContent(
+  content: string,
+  fileType: FileType,
+): Record<string, unknown> {
+  if (fileType === "yaml") {
+    return yaml.load(content) as Record<string, unknown>;
+  }
+  return JSON.parse(content);
+}
+
 class Action {
   #action;
   #filePath;
@@ -160,6 +204,7 @@ class Action {
   #populateOutputs;
   #prefixEnvVars;
   #prefixOutputs;
+  #fileType: FileType;
 
   /**
    * Create a new Action instance.
@@ -191,8 +236,11 @@ class Action {
     this.#prefixEnvVars = prefixEnvVars;
     this.#populateOutputs = populateOutputs;
     this.#prefixOutputs = prefixOutputs;
+    this.#fileType = detectFileType(filePath);
 
     this.#validate();
+
+    core.info(`Detected file type: ${this.#fileType}`);
   }
 
   /**
@@ -211,8 +259,8 @@ class Action {
    *
    * @throws {Error} Property does not exists
    */
-  #validateEnviromentPropertyExistence(decryptedJSON) {
-    if (lodash.isEmpty(decryptedJSON.environment)) {
+  #validateEnviromentPropertyExistence(decryptedContent) {
+    if (lodash.isEmpty(decryptedContent.environment)) {
       throw new Error("Could not find `environment` key in the EJSON file");
     }
   }
@@ -302,16 +350,16 @@ class Action {
       }
 
       core.setOutput("decrypted", out);
-      const decryptedJSON = JSON.parse(out);
+      const decryptedContent = parseContent(out, this.#fileType);
 
       if (this.#populateOutputs || this.#populateEnvVars) {
-        this.#validateEnviromentPropertyExistence(decryptedJSON);
+        this.#validateEnviromentPropertyExistence(decryptedContent);
       }
 
       if (this.#populateOutputs) {
         core.info("Populating outputs...");
 
-        lodash.forOwn(decryptedJSON.environment, (value, key) => {
+        lodash.forOwn(decryptedContent.environment, (value, key) => {
           const keyName = this.#prefixOutputs
             ? `${this.#prefixOutputs}${key}`
             : key;
@@ -325,7 +373,7 @@ class Action {
       if (this.#populateEnvVars) {
         core.info("Populating environment variables...");
 
-        lodash.forOwn(decryptedJSON.environment, (value, key) => {
+        lodash.forOwn(decryptedContent.environment, (value, key) => {
           const keyName = this.#prefixEnvVars
             ? `${this.#prefixEnvVars}${key}`
             : key;
