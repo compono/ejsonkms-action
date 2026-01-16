@@ -51019,7 +51019,7 @@ const RESERVED_ENV_VARS = new Set([
     "HOME",
     "USER",
     "SHELL",
-    "GITHUB_TOKEN",
+    // "GITHUB_TOKEN",
     "GITHUB_WORKSPACE",
     "GITHUB_REPOSITORY",
     "GITHUB_ACTION",
