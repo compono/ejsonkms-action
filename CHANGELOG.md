@@ -1,5 +1,11 @@
 # ejsonkms-action
 
+## 0.0.12
+
+### Patch Changes
+
+- 8938516: Harden up security
+
 ## 0.0.11
 
 ### Patch Changes
