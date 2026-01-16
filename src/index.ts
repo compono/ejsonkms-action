@@ -225,37 +225,6 @@ function parseContent(
 }
 
 /**
- * Validate that a file path is within the allowed workspace directory.
- * Prevents path traversal attacks.
- *
- * @param filePath - The file path to validate
- * @param paramName - The parameter name for error messages
- * @throws Error if path is outside the workspace
- */
-function validatePathWithinWorkspace(
-  filePath: string,
-  paramName: string,
-): void {
-  const workspaceDir =
-    process.env.GITHUB_WORKSPACE ||
-    process.env.RUNNER_WORKSPACE ||
-    process.cwd();
-  const resolvedPath = path.resolve(filePath);
-  const resolvedWorkspace = path.resolve(workspaceDir);
-
-  if (
-    !resolvedPath.startsWith(resolvedWorkspace + path.sep) &&
-    resolvedPath !== resolvedWorkspace
-  ) {
-    throw new Error(
-      `Security error: ${paramName} "${filePath}" resolves to "${resolvedPath}" ` +
-        `which is outside the workspace directory "${resolvedWorkspace}". ` +
-        `Path traversal is not allowed.`,
-    );
-  }
-}
-
-/**
  * Validate that an environment variable name is safe to use.
  *
  * @param name - The environment variable name to validate
@@ -314,21 +283,13 @@ class Action {
   }
 
   /**
-   * Validate inputs for security and correctness.
+   * Validate the existence of the JSON file at the specified path.
    *
-   * @throws {Error} File not exists or path traversal detected
+   * @throws {Error} File not exists
    */
   #validate() {
-    // Validate file-path is within workspace (prevent path traversal)
-    validatePathWithinWorkspace(this.#filePath, "file-path");
-
     if (!fs.existsSync(this.#filePath)) {
       throw new Error(`JSON file does not exist at path: ${this.#filePath}`);
-    }
-
-    // Validate out-file is within workspace if provided
-    if (this.#outFile) {
-      validatePathWithinWorkspace(this.#outFile, "out-file");
     }
   }
 

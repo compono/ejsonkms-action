@@ -51177,27 +51177,6 @@ function parseContent(content, fileType) {
     return JSON.parse(content);
 }
 /**
- * Validate that a file path is within the allowed workspace directory.
- * Prevents path traversal attacks.
- *
- * @param filePath - The file path to validate
- * @param paramName - The parameter name for error messages
- * @throws Error if path is outside the workspace
- */
-function validatePathWithinWorkspace(filePath, paramName) {
-    const workspaceDir = process.env.GITHUB_WORKSPACE ||
-        process.env.RUNNER_WORKSPACE ||
-        process.cwd();
-    const resolvedPath = path_1.default.resolve(filePath);
-    const resolvedWorkspace = path_1.default.resolve(workspaceDir);
-    if (!resolvedPath.startsWith(resolvedWorkspace + path_1.default.sep) &&
-        resolvedPath !== resolvedWorkspace) {
-        throw new Error(`Security error: ${paramName} "${filePath}" resolves to "${resolvedPath}" ` +
-            `which is outside the workspace directory "${resolvedWorkspace}". ` +
-            `Path traversal is not allowed.`);
-    }
-}
-/**
  * Validate that an environment variable name is safe to use.
  *
  * @param name - The environment variable name to validate
@@ -51263,14 +51242,8 @@ class Action {
     }
 }
 _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsRegion = new WeakMap(), _Action_outFile = new WeakMap(), _Action_populateEnvVars = new WeakMap(), _Action_populateOutputs = new WeakMap(), _Action_prefixEnvVars = new WeakMap(), _Action_prefixOutputs = new WeakMap(), _Action_fileType = new WeakMap(), _Action_instances = new WeakSet(), _Action_validate = function _Action_validate() {
-    // Validate file-path is within workspace (prevent path traversal)
-    validatePathWithinWorkspace(__classPrivateFieldGet(this, _Action_filePath, "f"), "file-path");
     if (!fs_1.default.existsSync(__classPrivateFieldGet(this, _Action_filePath, "f"))) {
         throw new Error(`JSON file does not exist at path: ${__classPrivateFieldGet(this, _Action_filePath, "f")}`);
-    }
-    // Validate out-file is within workspace if provided
-    if (__classPrivateFieldGet(this, _Action_outFile, "f")) {
-        validatePathWithinWorkspace(__classPrivateFieldGet(this, _Action_outFile, "f"), "out-file");
     }
 }, _Action_validateEnviromentPropertyExistence = function _Action_validateEnviromentPropertyExistence(decryptedContent) {
     if (lodash_1.default.isEmpty(decryptedContent.environment)) {
