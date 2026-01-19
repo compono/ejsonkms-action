@@ -1,6 +1,6 @@
 # ejsonkms-action
 
-Simple GitHub action that helps to execute encryption and decryption of [ejsonkms](https://github.com/runlevel5/ejsonkms-rs) file
+Simple GitHub action that helps to execute encryption and decryption of [ejsonkms-rs](https://github.com/runlevel5/ejsonkms-rs) file
 
 ## Requirements
 
