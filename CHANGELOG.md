@@ -1,5 +1,11 @@
 # ejsonkms-action
 
+## 0.0.13
+
+### Patch Changes
+
+- 4e7948b: Bump ejsonkms to 0.0.8
+
 ## 0.0.12
 
 ### Patch Changes
