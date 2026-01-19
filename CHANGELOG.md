@@ -1,5 +1,15 @@
 # ejsonkms-action
 
+## 0.1.0
+
+### Minor Changes
+
+- 18b28cd: Bump to Node.js 24 LTS
+
+### Patch Changes
+
+- a51280c: Fix version script to include build step and simplify release workflow
+
 ## 0.0.13
 
 ### Patch Changes
