@@ -17,7 +17,7 @@ This action only supports **Linux** runners with **glibc**. The following archit
 
 ```yaml
 - name: ejsonkms action
-  uses: compono/ejsonkms-action@main
+  uses: compono/ejsonkms-action@v0.1.0
   with:
     action: decrypt # [encrypt, decrypt]
     file-path: <path-to-ejsonkms-file>
@@ -44,9 +44,9 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Decrypt file
-        uses: compono/ejsonkms-action@main
+        uses: compono/ejsonkms-action@v0.1.0
         id: decrypt
         env:
           AWS_REGION: <aws-region>
@@ -70,7 +70,7 @@ jobs:
           echo
 
       - name: Encrypt file
-        uses: compono/ejsonkms-action@main
+        uses: compono/ejsonkms-action@v0.1.0
         id: encrypt
         with:
           action: encrypt
@@ -93,9 +93,9 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Decrypt file and populate GITHUB_ENV
-        uses: compono/ejsonkms-action@main
+        uses: compono/ejsonkms-action@v0.1.0
         id: decrypt
         env:
           AWS_REGION: <aws-region>
@@ -122,9 +122,9 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Decrypt file and populate GITHUB_ENV
-        uses: compono/ejsonkms-action@main
+        uses: compono/ejsonkms-action@v0.1.0
         id: decrypt
         env:
           AWS_REGION: <aws-region>
