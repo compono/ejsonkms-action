@@ -49877,7 +49877,7 @@ function install() {
         });
         yield io.mkdirP(destination);
         core.debug(`Successfully created ${destination}`);
-        const version = "0.0.8";
+        const version = "1.0.0";
         const filename = `ejsonkms-${version}-${architecture}.tar.xz`;
         const url = `https://github.com/runlevel5/ejsonkms-rs/releases/download/v${version}/${filename}`;
         // Fetch expected checksum from GitHub API

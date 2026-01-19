@@ -1,5 +1,11 @@
 # ejsonkms-action
 
+## 0.1.1
+
+### Patch Changes
+
+- 7d5ba49: Bump ejsonkms to v1.0.0
+
 ## 0.1.0
 
 ### Minor Changes

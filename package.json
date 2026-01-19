@@ -1,6 +1,6 @@
 {
   "name": "ejsonkms-action",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Simple action that decrypt/encrypt EJSONKMS file",
   "main": "dist/index.js",
