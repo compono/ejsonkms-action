@@ -14,7 +14,7 @@
     "test": "mocha ./tests/**/*.test.js",
     "pre-commit": "pre-commit install --hook-type commit-msg",
     "changeset": "changeset",
-    "version": "sh -c 'changeset version && npm install --package-lock-only'",
+    "version": "sh -c 'changeset version && npm install --package-lock-only && npm run build'",
     "release": "npm run build && changeset publish"
   },
   "repository": {
