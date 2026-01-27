@@ -8,7 +8,7 @@ This action only supports **Linux** runners with **glibc**. The following archit
 
 | Architecture    | Runner Examples                                 |
 | --------------- | ----------------------------------------------- |
-| x86_64 (amd64)  | `ubuntu-latest`, `ubuntu-22.04`, `ubuntu-24.04` |
+| x86_64 (amd64)  | `ubuntu-slim`, `ubuntu-22.04`, `ubuntu-24.04` |
 | aarch64 (arm64) | `ubuntu-24.04-arm`, self-hosted ARM64 runners   |
 
 **Note:** Alpine Linux and other musl-based distributions are not supported.
@@ -40,7 +40,7 @@ This action only supports **Linux** runners with **glibc**. The following archit
 ```yaml
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     steps:
       - name: Checkout Repository
@@ -89,7 +89,7 @@ Another great feature is to populate environment variables with the decrypted ke
 # KEY1: "encryped_value"
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     steps:
       - name: Checkout Repository
@@ -118,7 +118,7 @@ Alternatively if you prefer GitHub outputs:
 # KEY1: "encryped_value"
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     steps:
       - name: Checkout Repository
