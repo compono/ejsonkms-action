@@ -1,5 +1,12 @@
 # ejsonkms-action
 
+## 0.1.2
+
+### Patch Changes
+
+- fabcffc: chore: update to ubuntu-slim
+- 5234f13: fix: use authenticated GitHub API requests to avoid rate limiting
+
 ## 0.1.1
 
 ### Patch Changes
