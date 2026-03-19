@@ -49798,9 +49798,18 @@ const RESERVED_ENV_VARS = new Set([
  * @returns The SHA256 hash string (without "sha256:" prefix)
  * @throws Error if the asset is not found or API request fails
  */
-function fetchExpectedChecksum(version, filename) {
+function fetchExpectedChecksum(version, filename, githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
-        const client = new http.HttpClient("ejsonkms-action");
+        const headers = {};
+        if (githubToken) {
+            headers["Authorization"] = `token ${githubToken}`;
+            core.debug("Using authenticated GitHub API request");
+        }
+        else {
+            core.warning("No GitHub token provided. Using unauthenticated GitHub API requests which are subject to strict rate limiting (60 req/hr). " +
+                "Set the 'github-token' input to avoid rate limit errors.");
+        }
+        const client = new http.HttpClient("ejsonkms-action", [], { headers });
         const apiUrl = `https://api.github.com/repos/runlevel5/ejsonkms-rs/releases/tags/v${version}`;
         core.debug(`Fetching release info from ${apiUrl}`);
         const response = yield client.getJson(apiUrl);
@@ -49848,7 +49857,7 @@ function verifyChecksum(filePath, expectedChecksum) {
     }
     core.info("Checksum verification passed");
 }
-function install() {
+function install(githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
         const machine = os_1.default.arch();
         let architecture = "";
@@ -49881,8 +49890,12 @@ function install() {
         const filename = `ejsonkms-${version}-${architecture}.tar.xz`;
         const url = `https://github.com/runlevel5/ejsonkms-rs/releases/download/v${version}/${filename}`;
         // Fetch expected checksum from GitHub API
-        const expectedChecksum = yield fetchExpectedChecksum(version, filename);
-        const downloaded = yield tc.downloadTool(url);
+        const expectedChecksum = yield fetchExpectedChecksum(version, filename, githubToken);
+        const downloadHeaders = {};
+        if (githubToken) {
+            downloadHeaders["Authorization"] = `token ${githubToken}`;
+        }
+        const downloaded = yield tc.downloadTool(url, undefined, undefined, downloadHeaders);
         core.debug(`Successfully downloaded ejsonkms to ${downloaded}`);
         // Verify checksum before extracting
         verifyChecksum(downloaded, expectedChecksum);
@@ -50087,7 +50100,8 @@ _Action_action = new WeakMap(), _Action_filePath = new WeakMap(), _Action_awsReg
     core.info(content.toString());
 };
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
-    yield install();
+    const githubToken = core.getInput("github-token") || process.env.GITHUB_TOKEN || "";
+    yield install(githubToken || undefined);
     const action = new Action(core.getInput("action"), core.getInput("file-path"), core.getInput("aws-region"), core.getInput("out-file"), core.getBooleanInput("populate-env-vars"), core.getBooleanInput("populate-outputs"), core.getInput("prefix-env-vars"), core.getInput("prefix-outputs"));
     try {
         yield action.run();

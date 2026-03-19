@@ -32,6 +32,9 @@ inputs:
   prefix-outputs:
     description: "Add a prefix to the outputs"
     required: false
+  github-token:
+    description: "GitHub token for authenticated API requests to avoid rate limiting. Defaults to GITHUB_TOKEN env var."
+    required: false
 
 outputs:
   decrypted:
