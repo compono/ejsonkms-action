@@ -60,8 +60,19 @@ interface ReleaseResponse {
 async function fetchExpectedChecksum(
   version: string,
   filename: string,
+  githubToken?: string
 ): Promise<string> {
-  const client = new http.HttpClient("ejsonkms-action");
+  const headers: Record<string, string> = {};
+  if (githubToken) {
+    headers["Authorization"] = `token ${githubToken}`;
+    core.debug("Using authenticated GitHub API request");
+  } else {
+    core.warning(
+      "No GitHub token provided. Using unauthenticated GitHub API requests which are subject to strict rate limiting (60 req/hr). " +
+        "Set the 'github-token' input to avoid rate limit errors."
+    );
+  }
+  const client = new http.HttpClient("ejsonkms-action", [], { headers });
   const apiUrl = `https://api.github.com/repos/runlevel5/ejsonkms-rs/releases/tags/v${version}`;
 
   core.debug(`Fetching release info from ${apiUrl}`);
@@ -116,14 +127,14 @@ function verifyChecksum(filePath: string, expectedChecksum: string): void {
     throw new Error(
       `Checksum verification failed!\n` +
         `Expected: ${expectedChecksum}\n` +
-        `Actual:   ${actualChecksum}`,
+        `Actual:   ${actualChecksum}`
     );
   }
 
   core.info("Checksum verification passed");
 }
 
-async function install() {
+async function install(githubToken?: string) {
   const machine = os.arch();
   let architecture = "";
 
@@ -162,9 +173,22 @@ async function install() {
   const url = `https://github.com/runlevel5/ejsonkms-rs/releases/download/v${version}/${filename}`;
 
   // Fetch expected checksum from GitHub API
-  const expectedChecksum = await fetchExpectedChecksum(version, filename);
+  const expectedChecksum = await fetchExpectedChecksum(
+    version,
+    filename,
+    githubToken
+  );
 
-  const downloaded = await tc.downloadTool(url);
+  const downloadHeaders: Record<string, string> = {};
+  if (githubToken) {
+    downloadHeaders["Authorization"] = `token ${githubToken}`;
+  }
+  const downloaded = await tc.downloadTool(
+    url,
+    undefined,
+    undefined,
+    downloadHeaders
+  );
   core.debug(`Successfully downloaded ejsonkms to ${downloaded}`);
 
   // Verify checksum before extracting
@@ -199,7 +223,7 @@ function detectFileType(filePath: string): FileType {
       return "json";
     default:
       throw new Error(
-        `Unsupported file extension '${ext}'. Supported extensions: .json, .ejson, .yaml, .yml, .eyaml, .eyml`,
+        `Unsupported file extension '${ext}'. Supported extensions: .json, .ejson, .yaml, .yml, .eyaml, .eyml`
       );
   }
 }
@@ -213,7 +237,7 @@ function detectFileType(filePath: string): FileType {
  */
 function parseContent(
   content: string,
-  fileType: FileType,
+  fileType: FileType
 ): Record<string, unknown> {
   if (fileType === "yaml") {
     return yaml.load(content, { schema: yaml.JSON_SCHEMA }) as Record<
@@ -265,7 +289,7 @@ class Action {
     populateEnvVars = false,
     populateOutputs = false,
     prefixEnvVars = "",
-    prefixOutputs = "",
+    prefixOutputs = ""
   ) {
     this.#action = action;
     this.#filePath = filePath;
@@ -341,7 +365,7 @@ class Action {
       const { stdout, stderr, exitCode } = await exec.getExecOutput(
         ejsonkms,
         args,
-        opts,
+        opts
       );
 
       if (exitCode > 0) {
@@ -374,7 +398,7 @@ class Action {
       const { stdout, stderr, exitCode } = await exec.getExecOutput(
         ejsonkms,
         args,
-        opts,
+        opts
       );
 
       if (exitCode > 0) {
@@ -422,7 +446,7 @@ class Action {
           if (isReservedEnvVar(keyName)) {
             core.warning(
               `Skipping reserved environment variable "${keyName}" to prevent security issues. ` +
-                `Reserved variables cannot be overwritten.`,
+                `Reserved variables cannot be overwritten.`
             );
             return;
           }
@@ -447,7 +471,7 @@ class Action {
 
     core.warning(
       "⚠️ EJSON_DEBUG is enabled. File contents will be logged which may expose sensitive data. " +
-        "Do NOT use this in production workflows!",
+        "Do NOT use this in production workflows!"
     );
 
     const content = fs.readFileSync(filePath);
@@ -458,7 +482,9 @@ class Action {
 }
 
 const main = async () => {
-  await install();
+  const githubToken =
+    core.getInput("github-token") || process.env.GITHUB_TOKEN || "";
+  await install(githubToken || undefined);
 
   const action = new Action(
     core.getInput("action"),
@@ -468,7 +494,7 @@ const main = async () => {
     core.getBooleanInput("populate-env-vars"),
     core.getBooleanInput("populate-outputs"),
     core.getInput("prefix-env-vars"),
-    core.getInput("prefix-outputs"),
+    core.getInput("prefix-outputs")
   );
 
   try {
@@ -476,7 +502,9 @@ const main = async () => {
   } catch (error) {
     if (error instanceof Error) {
       core.setFailed(
-        `[ERROR] Failure on ejsonkms ${core.getInput("action")}: ${error.message}`,
+        `[ERROR] Failure on ejsonkms ${core.getInput("action")}: ${
+          error.message
+        }`
       );
     }
   }
