@@ -1,5 +1,11 @@
 # ejsonkms-action
 
+## 0.1.3
+
+### Patch Changes
+
+- 1b324d2: security: pin GitHub Actions to latest commit SHAs
+
 ## 0.1.2
 
 ### Patch Changes
