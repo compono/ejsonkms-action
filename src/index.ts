@@ -167,7 +167,13 @@ async function install(githubToken?: string) {
     case "arm64":
       cpu = "aarch64";
       break;
-    case "ppc64le":
+    case "ppc64":
+      // Node.js reports "ppc64" for both byte orders; ejsonkms only ships
+      // little-endian POWER builds.
+      if (os.endianness() !== "LE") {
+        console.error(`${machine} (big-endian) Unsupported platform`);
+        process.exit(1);
+      }
       cpu = "powerpc64le";
       break;
     default:
