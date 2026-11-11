@@ -4,14 +4,16 @@ Simple GitHub action that helps to execute encryption and decryption of [ejsonkm
 
 ## Requirements
 
-This action only supports **Linux** runners with **glibc**. The following architectures are supported:
+This action supports **Linux** runners, with either **glibc** or **musl** (Alpine). The C library is detected
+automatically and the matching `ejsonkms` build is installed. The following architectures are supported:
 
-| Architecture    | Runner Examples                                 |
-| --------------- | ----------------------------------------------- |
-| x86_64 (amd64)  | `ubuntu-slim`, `ubuntu-22.04`, `ubuntu-24.04` |
-| aarch64 (arm64) | `ubuntu-24.04-arm`, self-hosted ARM64 runners   |
+| Architecture          | Runner Examples                                                              |
+| --------------------- | ---------------------------------------------------------------------------- |
+| x86_64 (amd64)        | `ubuntu-slim`, `ubuntu-22.04`, `ubuntu-24.04`, jobs with `container: alpine` |
+| aarch64 (arm64)       | `ubuntu-24.04-arm`, self-hosted ARM64 runners                                |
+| powerpc64le (ppc64le) | self-hosted POWER runners                                                    |
 
-**Note:** Alpine Linux and other musl-based distributions are not supported.
+**Note:** on musl the job's container needs a `tar` that can read `.tar.xz` archives; Alpine's default one can.
 
 ## Configuration
 

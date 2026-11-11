@@ -134,24 +134,52 @@ function verifyChecksum(filePath: string, expectedChecksum: string): void {
   core.info("Checksum verification passed");
 }
 
+/**
+ * Whether this process runs on musl libc (Alpine and similar) rather than glibc.
+ *
+ * A Node.js built against glibc reports the glibc version it is running on;
+ * a musl build, which is what the runner uses for JavaScript actions inside
+ * an Alpine container, reports none. If Node.js cannot produce a report at
+ * all, fall back to looking for Alpine's release file.
+ *
+ * @returns true on musl, false on glibc
+ */
+function isMusl(): boolean {
+  const report = process.report?.getReport() as
+    | { header?: { glibcVersionRuntime?: string } }
+    | undefined;
+
+  if (report?.header) {
+    return !report.header.glibcVersionRuntime;
+  }
+
+  return fs.existsSync("/etc/alpine-release");
+}
+
 async function install(githubToken?: string) {
   const machine = os.arch();
-  let architecture = "";
+  let cpu = "";
 
   switch (machine) {
     case "x64":
-      architecture = "x86_64-unknown-linux-gnu";
+      cpu = "x86_64";
       break;
     case "arm64":
-      architecture = "aarch64-unknown-linux-gnu";
+      cpu = "aarch64";
       break;
     case "ppc64le":
-      architecture = "powerpc64le-unknown-linux-gnu";
+      cpu = "powerpc64le";
       break;
     default:
       console.error(`${machine} Unsupported platform`);
       process.exit(1);
   }
+
+  // ejsonkms publishes a glibc build and a statically linked musl build for
+  // each of these; the glibc one cannot start on a musl system.
+  const libc = isMusl() ? "musl" : "gnu";
+  const architecture = `${cpu}-unknown-linux-${libc}`;
+  core.info(`Detected platform ${architecture}`);
 
   core.info("Install ejsonkms...");
 
