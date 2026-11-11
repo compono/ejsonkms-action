@@ -168,7 +168,7 @@ async function install(githubToken?: string) {
   await io.mkdirP(destination);
   core.debug(`Successfully created ${destination}`);
 
-  const version = "1.0.0";
+  const version = "3.1.0";
   const filename = `ejsonkms-${version}-${architecture}.tar.xz`;
   const url = `https://github.com/runlevel5/ejsonkms-rs/releases/download/v${version}/${filename}`;
 
